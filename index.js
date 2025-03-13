@@ -17,11 +17,29 @@ if (!agent) {
   process.exit(1);
 }
 
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
 if ((await agent.dids.getCreatedDids()) < 1) {
+  let endorserNym;
+
+  await new Promise((resolve) => {
+    rl.question(
+      "Please enter the NYM value of a TRUSTEE node here: ",
+      (answer) => {
+        endorserNym = answer;
+        rl.close();
+        resolve();
+      },
+    );
+  });
+
   const backendDid = await agent.dids.create({
     method: "indy",
     options: {
-      endorserDid: "did:indy:local:V4SGRU86Z58d6TV7PBUe6f",
+      endorserDid: "did:indy:local:" + endorserNym,
       endorserMode: "external",
     },
   });
@@ -31,11 +49,6 @@ if ((await agent.dids.getCreatedDids()) < 1) {
   console.log(
     `Initializing backend for the first time.\nPlease add the following DID to the ledger: ${backendDid.didState.did}\nThis is the verkey of this DID: ${nymRequest.operation.verkey}`,
   );
-
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
 
   await new Promise((resolve) =>
     rl.question("Press enter to continue.", () => {
