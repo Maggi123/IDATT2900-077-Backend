@@ -53,13 +53,8 @@ if ((await agent.dids.getCreatedDids()) < 1) {
     if (err) console.error(err);
   });
 } else {
-  await fs.readFile("did.txt", (err, data) => {
-    if (err) {
-      console.error(err);
-      process.exit(1);
-    }
-    did = data.toString();
-  });
+  did = fs.readFileSync("did.txt").toString();
+  console.log(did);
 }
 
 app.get("/did", async (req, res) => {
