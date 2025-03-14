@@ -61,6 +61,11 @@ if ((await agent.dids.getCreatedDids()) < 1) {
     did: backendDid.didState.did,
   });
 
+  if (backendDid.didState.state === "failed") {
+    console.error("Unable to create an endorser DID for backend.");
+    process.exit(1);
+  }
+
   did = backendDid.didState.did;
   fs.writeFile("did.txt", did, (err) => {
     if (err) console.error(err);
