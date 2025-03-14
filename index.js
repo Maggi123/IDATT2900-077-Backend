@@ -47,7 +47,8 @@ if ((await agent.dids.getCreatedDids()) < 1) {
   const nymRequest = JSON.parse(backendDid.didState.nymRequest);
 
   console.log(
-    `Initializing backend for the first time.\nPlease add the following DID to the ledger: ${backendDid.didState.did}\nThis is the verkey of this DID: ${nymRequest.operation.verkey}`,
+    `Initializing backend for the first time.\nPlease add the following DID to the ledger: ${backendDid.didState.did}\n
+    This is the verkey of this DID: ${nymRequest.operation.verkey}`,
   );
 
   await new Promise((resolve) =>
