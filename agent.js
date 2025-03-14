@@ -12,7 +12,9 @@ import axios from "axios";
 
 export async function initializeAgent() {
   try {
-    const transactionsRq = await axios.get("http://localhost:9000/genesis");
+    const transactionsRq = await axios.get(
+      "http://" + process.env.BACKEND_INDY_NETWORK_IP + ":9000/genesis",
+    );
     const transactions = transactionsRq.data;
 
     const agent = new Agent({
