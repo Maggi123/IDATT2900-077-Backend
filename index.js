@@ -84,8 +84,6 @@ app.get("/did", async (req, res) => {
     }),
   );
 
-  console.log(did);
-
   res.send(
     await agent.dids.create({
       method: "indy",
