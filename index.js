@@ -77,25 +77,31 @@ if ((await agent.dids.getCreatedDids()) < 1) {
 }
 
 app.get("/did", async (req, res) => {
-  const seed = TypedArrayEncoder.fromString(
-    randomstring.generate({
-      length: 32,
-      charset: "alphabetic",
-    }),
-  );
+  const seedString = randomstring.generate({
+    length: 32,
+    charset: "alphabetic",
+  });
+  const seed = TypedArrayEncoder.fromString(seedString);
 
-  res.send(
-    await agent.dids.create({
-      method: "indy",
-      options: {
-        endorserDid: did,
-        endorserMode: "internal",
-      },
-      secret: {
-        seed: seed,
-      },
-    }),
-  );
+  const didCreationResult = await agent.dids.create({
+    method: "indy",
+    options: {
+      endorserDid: did,
+      endorserMode: "internal",
+    },
+    secret: {
+      seed: seed,
+    },
+  });
+
+  if (didCreationResult.didState.state === "failed") {
+    res.status(500).send(didCreationResult.didState.reason);
+  } else {
+    res.send({
+      didUrl: didCreationResult.didState.did,
+      seed: seedString,
+    });
+  }
 });
 
 app.listen(port, () => {
