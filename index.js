@@ -27,7 +27,7 @@ if ((await agent.dids.getCreatedDids()) < 1) {
 
   await new Promise((resolve) => {
     rl.question(
-      "Please enter the NYM value of a TRUSTEE node here: ",
+      "Please enter the NYM value of a TRUSTEE transaction here: ",
       (answer) => {
         endorserNym = answer;
         rl.close();
@@ -47,7 +47,8 @@ if ((await agent.dids.getCreatedDids()) < 1) {
   const nymRequest = JSON.parse(backendDid.didState.nymRequest);
 
   console.log(
-    `Initializing backend for the first time.\nPlease add the following DID to the ledger: ${backendDid.didState.did}\n
+    `Initializing backend for the first time.\n
+    Please add the following DID to the ledger (the part after the last colon): ${backendDid.didState.did}\n
     This is the verkey of this DID: ${nymRequest.operation.verkey}`,
   );
 
