@@ -30,7 +30,6 @@ if ((await agent.dids.getCreatedDids()) < 1) {
       "Please enter the NYM value of a TRUSTEE transaction here: ",
       (answer) => {
         endorserNym = answer;
-        rl.close();
         resolve();
       },
     );
