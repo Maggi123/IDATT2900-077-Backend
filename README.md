@@ -9,8 +9,10 @@
 2. Copy .env.example to .env
 3. Change BAKCEND_WALLET_KEY value in .env
 4. Run npm install
-5. Run ./von-network/manage up
-6. Run node index.js
+5. Start Docker
+6. Run ./von-network/manage build
+7. Run ./von-network/manage up
+8. Run node index.js
 
 ### First time setup
 When the backend is first started, some extra configurations steps are necessary.\
