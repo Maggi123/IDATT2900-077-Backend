@@ -9,7 +9,15 @@ import { TypedArrayEncoder } from "@credo-ts/core";
 const app = express();
 const port = 3000;
 
-const agent = await initializeAgent();
+let agent;
+try {
+  agent = await initializeAgent();
+} catch (error) {
+  console.error(
+    "Something went wrong while initializing agent. Cause: ",
+    error,
+  );
+}
 let did;
 
 if (!agent) {
@@ -22,12 +30,17 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-if ((await agent.dids.getCreatedDids()) < 1) {
+if ((await agent.dids.getCreatedDids({ method: "indy" })) < 1) {
   let endorserNym;
+
+  console.log(
+    `Initializing backend for the first time.
+    Please open the ledgers web interface here: http://${process.env.BACKEND_INDY_NETWORK_IP}:9000/browse/domain`,
+  );
 
   await new Promise((resolve) => {
     rl.question(
-      "Please enter the NYM value of a TRUSTEE transaction here: ",
+      "Please enter the NYM value of a transaction with the TRUSTEE role here: ",
       (answer) => {
         endorserNym = answer;
         resolve();
@@ -44,18 +57,25 @@ if ((await agent.dids.getCreatedDids()) < 1) {
   });
 
   const nymRequest = JSON.parse(backendDid.didState.nymRequest);
+  const didLastColonIndex = backendDid.didState.did.lastIndexOf(":");
+  const didShort = backendDid.didState.did.substring(didLastColonIndex + 1);
 
   console.log(
-    `Initializing backend for the first time.\n
-    Please add the following DID to the ledger (the part after the last colon): ${backendDid.didState.did}\n
+    `Please open the ledgers web interface here: http://${process.env.BACKEND_INDY_NETWORK_IP}:9000
+    To add a DID to the ledger, choose the "Register from DID" radio button under the "Authenticate a New DID" section.
+    Fill out the mandatory fields with the values given below.\n
+    Add the following DID to the ledger: ${didShort}\n
     This is the verkey of this DID: ${nymRequest.operation.verkey}`,
   );
 
   await new Promise((resolve) =>
-    rl.question("Press enter to continue.", () => {
-      rl.close();
-      resolve();
-    }),
+    rl.question(
+      "After you are done following the instructions above, press enter to continue.",
+      () => {
+        rl.close();
+        resolve();
+      },
+    ),
   );
 
   await agent.dids.import({
@@ -63,7 +83,9 @@ if ((await agent.dids.getCreatedDids()) < 1) {
   });
 
   if (backendDid.didState.state === "failed") {
-    console.error("Unable to create an endorser DID for backend.");
+    console.error(
+      `Unable to create an endorser DID for backend. Cause: ${backendDid.didState.reason}`,
+    );
     process.exit(1);
   }
 
@@ -72,7 +94,15 @@ if ((await agent.dids.getCreatedDids()) < 1) {
     if (err) console.error(err);
   });
 } else {
-  did = fs.readFileSync("did.txt").toString();
+  try {
+    did = fs.readFileSync("did.txt").toString();
+  } catch (err) {
+    console.error("Unable to open file containing backends DID. Cause: ", err);
+    console.error(
+      "Please delete backends wallet. It can normally be found under ~/.afj/data/wallet/backend",
+    );
+    process.exit(1);
+  }
   console.log(did);
 }
 

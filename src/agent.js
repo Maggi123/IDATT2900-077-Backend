@@ -11,11 +11,14 @@ import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
 import axios from "axios";
 
 export async function initializeAgent() {
-  try {
-    const transactionsRq = await axios.get(
-      "http://" + process.env.BACKEND_INDY_NETWORK_IP + ":9000/genesis",
-    );
-    const transactions = transactionsRq.data;
+  const transactionsRq = await axios.get(
+    "http://" + process.env.BACKEND_INDY_NETWORK_IP + ":9000/genesis",
+  );
+  if (transactionsRq.status !== 200) {
+    throw new Error("Unable to connect to Indy network.");
+  }
+
+  const transactions = transactionsRq.data;
 
     const agent = new Agent({
       config: {
@@ -49,10 +52,7 @@ export async function initializeAgent() {
       },
     });
 
-    await agent.initialize();
+  await agent.initialize();
 
-    return agent;
-  } catch (error) {
-    console.error(error);
-  }
+  return agent;
 }
