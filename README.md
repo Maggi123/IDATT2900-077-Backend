@@ -1,8 +1,8 @@
 # Running
 
 ### Dependencies for running
-- Node v. 18.8.x
-- Docker
+- Node v. 18.18.x
+- Docker Engine v. 28.x
 
 ### How to run
 1. Open bash terminal in project folder
@@ -10,9 +10,10 @@
 3. Change BAKCEND_WALLET_KEY value in .env
 4. Run npm install
 5. Start Docker
-6. Run ./von-network/manage build
-7. Run ./von-network/manage up
-8. Run node index.js
+6. On Windows, activate the "Add the *.docker.internal names to host's /etc/hosts file" under General settings
+7. Run ./von-network/manage build
+8. Run ./von-network/manage up
+9. Run node src/index.js
 
 ### First time setup
 When the backend is first started, some extra configurations steps are necessary.\
@@ -32,3 +33,6 @@ Adding a DID to the ledger can be done under the
 >Authenticate a New DID > Register from DID
 
 part of the web interface.
+
+### How to run after first time setup
+Execute steps 5, 8 and 9.
