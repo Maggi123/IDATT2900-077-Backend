@@ -11,28 +11,17 @@
 4. Run npm install
 5. Start Docker
 6. On Windows, activate the "Add the *.docker.internal names to host's /etc/hosts file" under General settings
-7. Run ./von-network/manage build
-8. Run ./von-network/manage up
-9. Run node src/index.js
+7. Run git submodule update --init
+8. Run ./von-network/manage build
+9. Run ./von-network/manage up
+10. Run node src/index.js
 
 ### First time setup
 When the backend is first started, some extra configurations steps are necessary.\
 The backend server will prompt the user to execute some steps\
 in relation to the local ledger that is run in step 5.\
 A web interface for the ledger can be found [here](http://localhost:9000)
-when the ledger is running.
-
-A TRUSTEE transaction can be found in the 
-
->Ledger State > Domain 
-
-part of the web interface.
-
-Adding a DID to the ledger can be done under the
-
->Authenticate a New DID > Register from DID
-
-part of the web interface.
+when the ledger is running.\
 
 ### How to run after first time setup
-Execute steps 5, 8 and 9.
+Execute steps 5, 9 and 10.
