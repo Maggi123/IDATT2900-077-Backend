@@ -1,13 +1,14 @@
 import express from "express";
-import { initializeAgent } from "./agent.js";
+import { createIssuer, initializeAgent } from "./agent.js";
 import "dotenv/config";
 import * as randomstring from "randomstring";
 import * as readline from "node:readline";
 import * as fs from "fs";
 import { TypedArrayEncoder } from "@credo-ts/core";
+import { getBackendPort } from "./util/networkUtil.js";
 
 const app = express();
-const port = 3000;
+const port = getBackendPort();
 
 let agent;
 try {
@@ -105,6 +106,9 @@ if ((await agent.dids.getCreatedDids({ method: "indy" })) < 1) {
   }
   console.log(did);
 }
+
+await createIssuer(agent);
+app.use("/oid4vci", agent.modules.openid4VcIssuer.config.router);
 
 app.get("/did", async (req, res) => {
   const seedString = randomstring.generate({

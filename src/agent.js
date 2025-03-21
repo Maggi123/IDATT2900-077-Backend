@@ -9,6 +9,8 @@ import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
 import { AskarModule } from "@credo-ts/askar";
 import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
 import axios from "axios";
+import { OpenId4VcIssuerModule } from "@credo-ts/openid4vc";
+import { getBackendIp, getBackendPort } from "./util/networkUtil.js";
 
 export async function initializeAgent() {
   const transactionsRq = await axios.get(
@@ -20,39 +22,63 @@ export async function initializeAgent() {
 
   const transactions = transactionsRq.data;
 
-    const agent = new Agent({
-      config: {
-        label: "backend-wallet",
-        walletConfig: {
-          id: "backend",
-          key: process.env.BACKEND_WALLET_KEY,
-        },
-        logger: new ConsoleLogger(LogLevel.test),
+  const agent = new Agent({
+    config: {
+      label: "backend-wallet",
+      walletConfig: {
+        id: "backend",
+        key: process.env.BACKEND_WALLET_KEY,
       },
-      dependencies: agentDependencies,
-      modules: {
-        indyVdr: new IndyVdrModule({
-          indyVdr,
-          networks: [
-            {
-              isProduction: false,
-              indyNamespace: "local",
-              genesisTransactions: transactions,
-              connectOnStartup: true,
+      logger: new ConsoleLogger(LogLevel.test),
+    },
+    dependencies: agentDependencies,
+    modules: {
+      indyVdr: new IndyVdrModule({
+        indyVdr,
+        networks: [
+          {
+            isProduction: false,
+            indyNamespace: "local",
+            genesisTransactions: transactions,
+            connectOnStartup: true,
+          },
+        ],
+      }),
+      askar: new AskarModule({
+        ariesAskar,
+      }),
+      dids: new DidsModule({
+        resolvers: [new IndyVdrIndyDidResolver()],
+        registrars: [new IndyVdrIndyDidRegistrar()],
+      }),
+      openid4VcIssuer: new OpenId4VcIssuerModule({
+        baseUrl: `${getBackendIp()}:${getBackendPort()}/oid4vci`,
+        endpoints: {
+          credential: {
+            credentialRequestToCredentialMapper: async () => {
+              throw new Error("Not implemented");
             },
-          ],
-        }),
-        askar: new AskarModule({
-          ariesAskar,
-        }),
-        dids: new DidsModule({
-          resolvers: [new IndyVdrIndyDidResolver()],
-          registrars: [new IndyVdrIndyDidRegistrar()],
-        }),
-      },
-    });
+          },
+        },
+      }),
+    },
+  });
 
   await agent.initialize();
 
   return agent;
+}
+
+export async function createIssuer(agent) {
+  agent.modules.openid4VcIssuer.createIssuer({
+    display: [
+      {
+        name: "Hospital",
+        description: "A hospital",
+        text_color: "#ABCDEF",
+        background_color: "#FFFF00",
+      },
+    ],
+    credentialsSupported: [],
+  });
 }
