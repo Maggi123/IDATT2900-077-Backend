@@ -10,13 +10,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@credo-ts/askar": "^0.5.13",
-    "@credo-ts/core": "^0.5.13",
-    "@credo-ts/indy-vdr": "^0.5.13",
-    "@credo-ts/node": "^0.5.13",
-    "@credo-ts/openid4vc": "^0.5.13",
-    "@hyperledger/aries-askar-nodejs": "^0.2.3",
+    "@credo-ts/askar": "0.6.0-alpha-20250325143622",
+    "@credo-ts/core": "0.6.0-alpha-20250325143622",
+    "@credo-ts/indy-vdr": "0.6.0-alpha-20250325143622",
+    "@credo-ts/node": "0.6.0-alpha-20250325143622",
+    "@credo-ts/openid4vc": "0.6.0-alpha-20250325143622",
     "@hyperledger/indy-vdr-nodejs": "^0.2.2",
+    "@openwallet-foundation/askar-nodejs": "^0.3.1",
     "axios": "^1.8.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -32,6 +32,9 @@
     "eslint-config-prettier": "^10.0.2",
     "eslint-plugin-prettier": "^5.2.3",
     "globals": "^16.0.0",
-    "prettier": "3.5.3"
+    "prettier": "3.5.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0"
   }
 }
