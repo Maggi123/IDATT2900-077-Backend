@@ -9,7 +9,7 @@ export function setupFhirRouter() {
     clientId: "my-client-id",
     redirectUri: "/fhir/redirect",
     scope: "launch/patient patient/*.read openid fhirUser",
-    iss: "http://localhost:4013/v/r4/sim/eyJoIjoiMSIsImIiOiIxIiwiaSI6IjEiLCJqIjoiMSIsImUiOiIzIn0/fhir",
+    iss: process.env.SMART_URL,
   };
 
   fhirRouter.get("/launch", (req, res, next) => {
