@@ -25,5 +25,5 @@ export function setupFhirRouter() {
 }
 
 export async function getMedicationRequest() {
-  return await fhirClient.request("Patient/1/MedicationRequest");
+  return await fhirClient.request("MedicationRequest/100");
 }

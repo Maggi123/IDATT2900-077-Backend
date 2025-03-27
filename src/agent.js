@@ -1,21 +1,25 @@
 import {
   Agent,
   ClaimFormat,
-  ConsoleLogger,
   DidsModule,
   JwaSignatureAlgorithm,
   LogLevel,
+  parseDid,
   W3cCredential,
+  W3cCredentialSubject,
+  w3cDate,
+  W3cIssuer,
 } from "@credo-ts/core";
 import { agentDependencies } from "@credo-ts/node";
 import {
   IndyVdrIndyDidRegistrar,
   IndyVdrIndyDidResolver,
   IndyVdrModule,
+  IndyVdrSovDidResolver,
 } from "@credo-ts/indy-vdr";
 import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
 import { AskarModule } from "@credo-ts/askar";
-import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
+import { askar } from "@openwallet-foundation/askar-nodejs";
 import axios from "axios";
 import {
   OpenId4VcIssuerModule,
@@ -26,17 +30,22 @@ import { getBackendIp, getBackendPort } from "./util/networkUtil.js";
 import readline from "node:readline";
 import fs from "fs";
 import { getMedicationRequest } from "./fhir.js";
+import { MyLogger } from "./logger.js";
 
-const supportedCredentials = [
-  {
+const supportedCredentials = {
+  Prescription: {
     format: OpenId4VciCredentialFormatProfile.JwtVcJson,
     vct: "Prescription",
-    id: "Prescription",
+    scope: "openid4vc:credential:Prescription",
     cryptographic_binding_methods_supported: ["did:indy"],
     cryptographic_suites_supported: [JwaSignatureAlgorithm.EdDSA],
     types: [OpenId4VciCredentialFormatProfile.JwtVcJson],
+    credential_definition: {
+      type: ["VerifiableCredential", "Prescription"],
+      prescription: {},
+    },
   },
-];
+};
 
 export async function createIssuer(agent, issuerId) {
   let issuerRecord;
@@ -52,8 +61,9 @@ export async function createIssuer(agent, issuerId) {
   if (issuerRecord) {
     await agent.modules.openid4VcIssuer.updateIssuerMetadata({
       issuerId: issuerId,
-      credentialsSupported: supportedCredentials,
+      credentialConfigurationsSupported: supportedCredentials,
     });
+    console.log("Updated issuer metadata");
     return;
   }
 
@@ -67,7 +77,7 @@ export async function createIssuer(agent, issuerId) {
         background_color: "#FFFF00",
       },
     ],
-    credentialsSupported: supportedCredentials,
+    credentialConfigurationsSupported: supportedCredentials,
   });
 }
 
@@ -162,42 +172,44 @@ export async function setDid(agent) {
 }
 
 const credentialRequestToCredentialMapperFunction = async ({
-  credentialOffer,
-  credentialsSupported,
-  holderBinding,
+  issuanceSession,
+  holderBindings,
+  credentialConfigurationIds,
+  credentialConfigurationsSupported: supported,
 }) => {
-  if (credentialsSupported.length > 0) {
-    throw new Error("Only one credential is supported.");
+  const credentialConfigurationId = credentialConfigurationIds[0];
+  const credentialConfiguration = supported[credentialConfigurationId];
+  const medicationRequest = await getMedicationRequest();
+
+  if (
+    credentialConfiguration.format ===
+    OpenId4VciCredentialFormatProfile.JwtVcJson
+  ) {
+    return {
+      credentialConfigurationId,
+      format: ClaimFormat.JwtVc,
+      credentials: holderBindings.map((holderBinding) => {
+        if (!holderBinding.didUrl)
+          throw new Error("Did not receive only DID holder bindings.");
+        return {
+          credential: new W3cCredential({
+            type: credentialConfiguration.credential_definition.type,
+            issuer: new W3cIssuer({
+              id: issuanceSession.issuerId,
+            }),
+            credentialSubject: new W3cCredentialSubject({
+              id: parseDid(holderBinding.didUrl).did,
+              claims: medicationRequest,
+            }),
+            issuanceDate: w3cDate(Date.now()),
+          }),
+          verificationMethod: `${issuanceSession.issuerId}#key-1`,
+        };
+      }),
+    };
   }
 
-  const credentialType = credentialsSupported[0];
-
-  if (credentialType.vct !== "Prescription") {
-    throw new Error("Only Prescription is supported.");
-  }
-
-  if (credentialType.format !== OpenId4VciCredentialFormatProfile.JwtVcJson) {
-    throw new Error(
-      `Only ${OpenId4VciCredentialFormatProfile.JwtVcJson} format is supported.`,
-    );
-  }
-
-  return {
-    credentialSupportedId: credentialType.id,
-    format: ClaimFormat.JwtVc,
-    verificationMethod: "verkey",
-    credential: new W3cCredential({
-      type: ["VerifiableCredential", "Prescription"],
-      issuer: {
-        id: credentialOffer.issuerId,
-      },
-      issuanceDate: new Date(Date.now()).toISOString(),
-      credentialSubject: {
-        id: holderBinding,
-        claims: getMedicationRequest(),
-      },
-    }),
-  };
+  throw new Error("Invalid credential request.");
 };
 
 export async function initializeAgent() {
@@ -217,7 +229,8 @@ export async function initializeAgent() {
         id: "backend",
         key: process.env.BACKEND_WALLET_KEY,
       },
-      logger: new ConsoleLogger(LogLevel.test),
+      logger: new MyLogger(LogLevel.test),
+      allowInsecureHttpUrls: true,
     },
     dependencies: agentDependencies,
     modules: {
@@ -233,20 +246,16 @@ export async function initializeAgent() {
         ],
       }),
       askar: new AskarModule({
-        ariesAskar,
+        askar,
       }),
       dids: new DidsModule({
-        resolvers: [new IndyVdrIndyDidResolver()],
+        resolvers: [new IndyVdrIndyDidResolver(), new IndyVdrSovDidResolver()],
         registrars: [new IndyVdrIndyDidRegistrar()],
       }),
       openid4VcIssuer: new OpenId4VcIssuerModule({
         baseUrl: `http://${getBackendIp()}:${getBackendPort()}/oid4vci`,
-        endpoints: {
-          credential: {
-            credentialRequestToCredentialMapper:
-              credentialRequestToCredentialMapperFunction,
-          },
-        },
+        credentialRequestToCredentialMapper:
+          credentialRequestToCredentialMapperFunction,
       }),
     },
   });

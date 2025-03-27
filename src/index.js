@@ -9,6 +9,7 @@ import {
 import "dotenv/config";
 import * as randomstring from "randomstring";
 import { TypedArrayEncoder } from "@credo-ts/core";
+import { parseIndyDid } from "@credo-ts/anoncreds";
 import { getBackendPort } from "./util/networkUtil.js";
 import { setupFhirRouter } from "./fhir.js";
 
@@ -31,6 +32,14 @@ if (!agent) {
 }
 
 const did = await setDid(agent);
+const sovDid = `did:sov:${parseIndyDid(did).namespaceIdentifier}`;
+try {
+  await agent.dids.resolveDidDocument(sovDid);
+} catch (error) {
+  console.log(
+    `Could not resolve legacy DID, unable to sign credentials. Cause: ${error}`,
+  );
+}
 
 app.use(
   session({
@@ -41,7 +50,7 @@ app.use(
 );
 app.set("view engine", "pug");
 
-await createIssuer(agent, did);
+await createIssuer(agent, sovDid);
 app.use("/oid4vci", agent.modules.openid4VcIssuer.config.router);
 
 const fhirRouter = setupFhirRouter();
@@ -89,7 +98,7 @@ app.get("/hospital", (req, res) => {
 
 app.get("/hospitalPrescriptionOffer", async (req, res, next) => {
   try {
-    const offer = await createPrescriptionOffer(agent, did);
+    const offer = await createPrescriptionOffer(agent, sovDid);
 
     res.render("hospitalPrescriptionOffer", {
       offer: offer,
