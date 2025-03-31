@@ -24,6 +24,24 @@ export function setupFhirRouter() {
   return fhirRouter;
 }
 
-export async function getMedicationRequest() {
-  return await fhirClient.request("MedicationRequest/100");
+export async function getMedicationRequest(id) {
+  return await fhirClient.request(`MedicationRequest/${id}`);
+}
+
+export async function getAllMedicationRequests() {
+  return await fhirClient.request("MedicationRequest");
+}
+
+export function checkSmartSession(req, res, next) {
+  try {
+    const state = fhirClient.getState();
+    if (state.expiresAt < Math.floor(new Date().getTime() / 1000))
+      res.redirect(`/session_expired`);
+    else next();
+  } catch (err) {
+    console.log(
+      `Unable to communicate with SMART server, redirecting to portal. Cause: ${err}`,
+    );
+    res.redirect(`/`);
+  }
 }

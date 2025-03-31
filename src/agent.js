@@ -29,8 +29,9 @@ import {
 import { getBackendIp, getBackendPort } from "./util/networkUtil.js";
 import readline from "node:readline";
 import fs from "fs";
-import { getMedicationRequest } from "./fhir.js";
+import { getMedicationRequest } from "./issuer/hospital/fhir.js";
 import { MyLogger } from "./logger.js";
+import { getPrescriptionClaims } from "./issuer/hospital/hospital.js";
 
 const supportedCredentials = {
   Prescription: {
@@ -179,7 +180,9 @@ const credentialRequestToCredentialMapperFunction = async ({
 }) => {
   const credentialConfigurationId = credentialConfigurationIds[0];
   const credentialConfiguration = supported[credentialConfigurationId];
-  const medicationRequest = await getMedicationRequest();
+  const prescriptionClaims = await getPrescriptionClaims(
+    issuanceSession.issuanceMetadata.prescriptionId,
+  );
 
   if (
     credentialConfiguration.format ===
@@ -199,7 +202,7 @@ const credentialRequestToCredentialMapperFunction = async ({
             }),
             credentialSubject: new W3cCredentialSubject({
               id: parseDid(holderBinding.didUrl).did,
-              claims: medicationRequest,
+              claims: prescriptionClaims,
             }),
             issuanceDate: w3cDate(Date.now()),
           }),
@@ -265,13 +268,16 @@ export async function initializeAgent() {
   return agent;
 }
 
-export async function createPrescriptionOffer(agent, issuerId) {
+export async function createPrescriptionOffer(agent, issuerId, prescriptionId) {
   const { credentialOffer, issuanceSession } =
     await agent.modules.openid4VcIssuer.createCredentialOffer({
       issuerId: issuerId,
       offeredCredentials: ["Prescription"],
       preAuthorizedCodeFlowConfig: {
         userPinRequired: false,
+      },
+      issuanceMetadata: {
+        prescriptionId: prescriptionId,
       },
     });
 
