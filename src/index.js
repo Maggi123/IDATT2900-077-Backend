@@ -1,20 +1,18 @@
 import express from "express";
 import session from "express-session";
-import {
-  createIssuer,
-  setDid,
-  initializeAgent,
-  createPrescriptionOffer,
-} from "./agent.js";
+import { createIssuer, setDid, initializeAgent } from "./agent.js";
 import "dotenv/config";
 import * as randomstring from "randomstring";
 import { TypedArrayEncoder } from "@credo-ts/core";
 import { parseIndyDid } from "@credo-ts/anoncreds";
 import { getBackendPort } from "./util/networkUtil.js";
-import { setupFhirRouter } from "./fhir.js";
+import { setupFhirRouter } from "./issuer/hospital/fhir.js";
+import { setupHospitalIssuerRouter } from "./issuer/hospital/hospital.js";
 
 const app = express();
 const port = getBackendPort();
+
+app.use(express.static("public"));
 
 let agent;
 try {
@@ -56,6 +54,9 @@ app.use("/oid4vci", agent.modules.openid4VcIssuer.config.router);
 const fhirRouter = setupFhirRouter();
 app.use("/fhir", fhirRouter);
 
+const hospitalRouter = setupHospitalIssuerRouter(agent, sovDid);
+app.use("/hospital", hospitalRouter);
+
 app.get("/did", async (req, res, next) => {
   try {
     const seedString = randomstring.generate({
@@ -88,24 +89,12 @@ app.get("/did", async (req, res, next) => {
   }
 });
 
+app.get("/session_expired", (req, res) => {
+  res.render("sessionExpired");
+});
+
 app.get("/", (req, res) => {
   res.render("index");
-});
-
-app.get("/hospital", (req, res) => {
-  res.render("hospital");
-});
-
-app.get("/hospitalPrescriptionOffer", async (req, res, next) => {
-  try {
-    const offer = await createPrescriptionOffer(agent, sovDid);
-
-    res.render("hospitalPrescriptionOffer", {
-      offer: offer,
-    });
-  } catch (error) {
-    next(error);
-  }
 });
 
 app.listen(port, () => {
