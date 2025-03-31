@@ -25,11 +25,11 @@ import {
   OpenId4VcIssuerModule,
   OpenId4VciCredentialFormatProfile,
   OpenId4VcIssuerEvents,
+  OpenId4VcIssuanceSessionState,
 } from "@credo-ts/openid4vc";
 import { getBackendIp, getBackendPort } from "./util/networkUtil.js";
 import readline from "node:readline";
 import fs from "fs";
-import { getMedicationRequest } from "./issuer/hospital/fhir.js";
 import { MyLogger } from "./logger.js";
 import { getPrescriptionClaims } from "./issuer/hospital/hospital.js";
 
@@ -48,6 +48,15 @@ const supportedCredentials = {
   },
 };
 
+const display = [
+  {
+    name: "Hospital",
+    description: "A hospital",
+    text_color: "#ABCDEF",
+    background_color: "#FFFF00",
+  },
+];
+
 export async function createIssuer(agent, issuerId) {
   let issuerRecord;
 
@@ -62,6 +71,7 @@ export async function createIssuer(agent, issuerId) {
   if (issuerRecord) {
     await agent.modules.openid4VcIssuer.updateIssuerMetadata({
       issuerId: issuerId,
+      display: display,
       credentialConfigurationsSupported: supportedCredentials,
     });
     console.log("Updated issuer metadata");
@@ -70,14 +80,7 @@ export async function createIssuer(agent, issuerId) {
 
   await agent.modules.openid4VcIssuer.createIssuer({
     issuerId: issuerId,
-    display: [
-      {
-        name: "Hospital",
-        description: "A hospital",
-        text_color: "#ABCDEF",
-        background_color: "#FFFF00",
-      },
-    ],
+    display: display,
     credentialConfigurationsSupported: supportedCredentials,
   });
 }
@@ -283,12 +286,24 @@ export async function createPrescriptionOffer(agent, issuerId, prescriptionId) {
 
   agent.events.on(
     OpenId4VcIssuerEvents.IssuanceSessionStateChanged,
-    (event) => {
+    function handler(event) {
       if (event.payload.issuanceSession.id === issuanceSession.id) {
         console.log(
           "Issuance session state changed to ",
           event.payload.issuanceSession.state,
         );
+        if (
+          event.payload.issuanceSession.state ===
+          OpenId4VcIssuanceSessionState.Completed
+        ) {
+          agent.config.logger.info(
+            `Removing listener from issuanceSession with id: ${event.payload.issuanceSession.id}`,
+          );
+          agent.events.off(
+            OpenId4VcIssuerEvents.IssuanceSessionStateChanged,
+            handler,
+          );
+        }
       }
     },
   );
