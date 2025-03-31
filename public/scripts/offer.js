@@ -1,0 +1,1 @@
+new QRCode(document.getElementById("qrcode"), document.getElementById("offer").innerText);
