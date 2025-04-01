@@ -100,3 +100,9 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   agent.config.logger.info(`Server listening on port ${port}`);
 });
+
+process.on("unhandledRejection", (reason, p) => {
+  agent.config.logger.error(
+    `Unhandled Rejection at: Promise ${p} reason: ${reason}`,
+  );
+});
