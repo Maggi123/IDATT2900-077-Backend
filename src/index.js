@@ -18,14 +18,14 @@ let agent;
 try {
   agent = await initializeAgent();
 } catch (error) {
-  console.error(
+  agent.config.logger.error(
     "Something went wrong while initializing agent. Cause: ",
     error,
   );
 }
 
 if (!agent) {
-  console.log("No agent available");
+  agent.config.logger.fatal("No agent available");
   process.exit(1);
 }
 
@@ -34,7 +34,7 @@ const sovDid = `did:sov:${parseIndyDid(did).namespaceIdentifier}`;
 try {
   await agent.dids.resolveDidDocument(sovDid);
 } catch (error) {
-  console.log(
+  agent.config.logger.error(
     `Could not resolve legacy DID, unable to sign credentials. Cause: ${error}`,
   );
 }
@@ -98,5 +98,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+  agent.config.logger.info(`Server listening on port ${port}`);
 });
