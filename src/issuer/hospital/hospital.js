@@ -58,7 +58,7 @@ export async function getPrescriptionClaims(id) {
     for (const item of medicationRequest.medicationCodeableConcept.coding) {
       if (item.system === rxnormSystem)
         prescriptionClaims.activeIngredient =
-          (await getRxNormInName(item.code)) ?? null;
+          (await getRxNormInName(item.code)) ?? undefined;
     }
   }
   prescriptionClaims.name = medicationRequest.medicationCodeableConcept.text;
