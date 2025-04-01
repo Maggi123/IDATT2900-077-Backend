@@ -43,7 +43,17 @@ const supportedCredentials = {
     types: [OpenId4VciCredentialFormatProfile.JwtVcJson],
     credential_definition: {
       type: ["VerifiableCredential", "Prescription"],
-      prescription: {},
+      issuer: {
+        id: "",
+      },
+      credentialSubject: {
+        id: {},
+        claims: {
+          name: "",
+          authoredOn: "",
+          activeIngredient: "",
+        },
+      },
     },
   },
 };
