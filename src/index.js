@@ -13,6 +13,7 @@ const app = express();
 const port = getBackendPort();
 
 app.use(express.static("public"));
+app.set("query parser", "extended");
 
 let agent;
 try {
