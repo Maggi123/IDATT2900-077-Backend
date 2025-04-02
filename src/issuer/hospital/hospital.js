@@ -38,6 +38,7 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
         agent,
         issuerDid,
         req.params.id,
+        !isNaN(parseInt(req.query.validity)) ? parseInt(req.query.validity) : 1,
       );
 
       res.render("hospital/hospitalPrescriptionOffer", {
