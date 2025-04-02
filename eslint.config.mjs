@@ -12,6 +12,6 @@ export default [
   pluginJs.configs.recommended,
   eslintPluginPrettierRecommended,
   {
-    ignores: ["von-network/*"],
+    ignores: ["von-network/*", "public/*"],
   },
 ];
