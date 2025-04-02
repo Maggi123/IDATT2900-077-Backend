@@ -44,14 +44,14 @@ const supportedCredentials = {
     credential_definition: {
       type: ["VerifiableCredential", "Prescription"],
       issuer: {
-        id: "",
+        id: {},
       },
       credentialSubject: {
         id: {},
         claims: {
-          name: "",
-          authoredOn: "",
-          activeIngredient: "",
+          name: {},
+          authoredOn: {},
+          activeIngredient: {},
         },
       },
     },
