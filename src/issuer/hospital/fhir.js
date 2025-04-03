@@ -36,7 +36,7 @@ export function checkSmartSession(req, res, next) {
   try {
     const state = fhirClient.getState();
     if (state.expiresAt < Math.floor(new Date().getTime() / 1000))
-      res.redirect(`/session_expired`);
+      res.redirect(`hospital/session_expired`);
     else next();
   } catch (err) {
     console.log(
