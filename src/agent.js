@@ -44,14 +44,14 @@ const supportedCredentials = {
     credential_definition: {
       type: ["VerifiableCredential", "Prescription"],
       issuer: {
-        id: "",
+        id: {},
       },
       credentialSubject: {
         id: {},
         claims: {
-          name: "",
-          authoredOn: "",
-          activeIngredient: "",
+          name: {},
+          authoredOn: {},
+          activeIngredient: {},
         },
       },
     },
@@ -195,6 +195,11 @@ const credentialRequestToCredentialMapperFunction = async ({
   const prescriptionClaims = await getPrescriptionClaims(
     issuanceSession.issuanceMetadata.prescriptionId,
   );
+  const issuanceDate = new Date();
+  const expirationDate = new Date();
+  expirationDate.setDate(
+    expirationDate.getDate() + issuanceSession.issuanceMetadata.validity,
+  );
 
   if (
     credentialConfiguration.format ===
@@ -216,7 +221,8 @@ const credentialRequestToCredentialMapperFunction = async ({
               id: parseDid(holderBinding.didUrl).did,
               claims: prescriptionClaims,
             }),
-            issuanceDate: w3cDate(Date.now()),
+            issuanceDate: w3cDate(issuanceDate.getTime()),
+            expirationDate: w3cDate(expirationDate.getTime()),
           }),
           verificationMethod: `${issuanceSession.issuerId}#key-1`,
         };
@@ -280,7 +286,12 @@ export async function initializeAgent() {
   return agent;
 }
 
-export async function createPrescriptionOffer(agent, issuerId, prescriptionId) {
+export async function createPrescriptionOffer(
+  agent,
+  issuerId,
+  prescriptionId,
+  validity,
+) {
   const { credentialOffer, issuanceSession } =
     await agent.modules.openid4VcIssuer.createCredentialOffer({
       issuerId: issuerId,
@@ -290,6 +301,7 @@ export async function createPrescriptionOffer(agent, issuerId, prescriptionId) {
       },
       issuanceMetadata: {
         prescriptionId: prescriptionId,
+        validity: validity,
       },
     });
 
