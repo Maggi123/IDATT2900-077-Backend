@@ -1,7 +1,7 @@
 {
   "name": "idatt2900-077-backend",
   "version": "1.0.0",
-  "main": "src/index.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@credo-ts/anoncreds": "0.6.0-alpha-20250325143622",
     "@credo-ts/askar": "0.6.0-alpha-20250325143622",
     "@credo-ts/core": "0.6.0-alpha-20250325143622",
     "@credo-ts/indy-vdr": "0.6.0-alpha-20250325143622",
