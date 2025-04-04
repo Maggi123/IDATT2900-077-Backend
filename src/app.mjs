@@ -1,24 +1,28 @@
 import express from "express";
 import session from "express-session";
+import "dotenv/config";
+import { LogLevel } from "@credo-ts/core";
+import { parseIndyDid } from "@credo-ts/anoncreds";
+
+import { MyLogger } from "./util/logger.mjs";
 import {
   createIssuer,
   setDid,
   initializeAgent,
   OID4VCI_ROUTER_PATH,
-} from "./agent/agent.js";
-import "dotenv/config";
-import * as randomstring from "randomstring";
-import { LogLevel, TypedArrayEncoder } from "@credo-ts/core";
-import { parseIndyDid } from "@credo-ts/anoncreds";
-import {
-  setupSmartRouter,
-  SMART_ROUTER_PATH,
-} from "./agent/issuer/hospital/smart.js";
+} from "./service/agent.service.mjs";
 import {
   HOSPITAL_ROUTER_PATH,
   setupHospitalIssuerRouter,
-} from "./agent/issuer/hospital/hospital.js";
-import { MyLogger } from "./util/logger.js";
+} from "./controller/hospital.controller.mjs";
+import {
+  setupSmartRouter,
+  SMART_ROUTER_PATH,
+} from "./controller/smart.controller.mjs";
+import {
+  DID_ROUTER_PATH,
+  setupDidRouter,
+} from "./controller/did.controller.mjs";
 
 export async function setupApp() {
   const app = express();
@@ -71,41 +75,8 @@ export async function setupApp() {
   const hospitalRouter = setupHospitalIssuerRouter(agent, sovDid);
   app.use(HOSPITAL_ROUTER_PATH, hospitalRouter);
 
-  app.get("/did", async (req, res, next) => {
-    try {
-      const seedString = randomstring.generate({
-        length: 32,
-        charset: "alphabetic",
-      });
-      const seed = TypedArrayEncoder.fromString(seedString);
-
-      const didCreationResult = await agent.dids.create({
-        method: "indy",
-        options: {
-          endorserDid: did,
-          endorserMode: "internal",
-        },
-        secret: {
-          seed: seed,
-        },
-      });
-
-      if (didCreationResult.didState.state === "failed") {
-        res.status(500).send(didCreationResult.didState.reason);
-      } else {
-        res.send({
-          didUrl: didCreationResult.didState.did,
-          seed: seedString,
-        });
-      }
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.get("/session_expired", (req, res) => {
-    res.render("sessionExpired");
-  });
+  const didRouter = setupDidRouter(agent, did);
+  app.use(DID_ROUTER_PATH, didRouter);
 
   app.get("/", (req, res) => {
     res.render("index", {

@@ -25,7 +25,7 @@
 17. Run "git submodule update --init"
 18. Run "./von-network/manage build"
 19. Run "./von-network/manage up"
-20. Run "node src/server.js"
+20. Run "node src/server.mjs"
 
 ### First time setup
 When the backend is first started, some extra configurations steps are necessary.\

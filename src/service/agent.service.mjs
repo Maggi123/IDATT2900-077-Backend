@@ -1,3 +1,8 @@
+import readline from "node:readline";
+import fs from "fs";
+
+import axios from "axios";
+
 import {
   Agent,
   ClaimFormat,
@@ -16,18 +21,16 @@ import {
   IndyVdrModule,
   IndyVdrSovDidResolver,
 } from "@credo-ts/indy-vdr";
-import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
-import { AskarModule } from "@credo-ts/askar";
-import { askar } from "@openwallet-foundation/askar-nodejs";
-import axios from "axios";
 import {
   OpenId4VcIssuerModule,
   OpenId4VciCredentialFormatProfile,
 } from "@credo-ts/openid4vc";
-import { getBackendIp, getBackendPort } from "../util/networkUtil.js";
-import readline from "node:readline";
-import fs from "fs";
-import { getPrescriptionClaims } from "./issuer/hospital/hospital.js";
+import { AskarModule } from "@credo-ts/askar";
+import { askar } from "@openwallet-foundation/askar-nodejs";
+import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
+
+import { getBackendIp, getBackendPort } from "../util/networkUtil.mjs";
+import { getPrescriptionClaims } from "./hospital.service.mjs";
 
 export const OID4VCI_ROUTER_PATH = "/oid4vci";
 

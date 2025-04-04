@@ -1,5 +1,5 @@
-import { setupApp } from "./app.js";
-import { getBackendPort } from "./util/networkUtil.js";
+import { getBackendPort } from "./util/networkUtil.mjs";
+import { setupApp } from "./app.mjs";
 
 const port = getBackendPort();
 const [app, logger] = await setupApp();
