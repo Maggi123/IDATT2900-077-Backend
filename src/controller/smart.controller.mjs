@@ -26,7 +26,7 @@ export function setupSmartRouter() {
   });
 
   router.get("/session_expired", (req, res) => {
-    res.render("sessionExpired");
+    res.render("hospital/sessionExpired");
   });
 
   return router;
