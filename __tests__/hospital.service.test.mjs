@@ -1,4 +1,4 @@
-import { sampleMedicationRequest } from "./__data__/smartSampleData.js";
+import { sampleMedicationRequest } from "./__data__/smartSampleData.mjs";
 import { getPrescriptionClaims } from "../src/service/hospital.service.mjs";
 
 describe("hospital tests", () => {
