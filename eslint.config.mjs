@@ -6,7 +6,10 @@ import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended"
 export default [
   {
     languageOptions: {
-      globals: globals.node,
+      globals: {
+        ...globals.node,
+        ...globals.vitest,
+      },
     },
   },
   pluginJs.configs.recommended,
