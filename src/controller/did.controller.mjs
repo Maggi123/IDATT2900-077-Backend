@@ -1,6 +1,5 @@
 import express from "express";
-import * as randomstring from "randomstring";
-import { TypedArrayEncoder } from "@credo-ts/core";
+import { createDid } from "../service/did.service.mjs";
 
 export const DID_ROUTER_PATH = "/did";
 
@@ -9,22 +8,10 @@ export function setupDidRouter(agent, endorserDid) {
 
   router.get("/", async (req, res, next) => {
     try {
-      const seedString = randomstring.generate({
-        length: 32,
-        charset: "alphabetic",
-      });
-      const seed = TypedArrayEncoder.fromString(seedString);
-
-      const didCreationResult = await agent.dids.create({
-        method: "indy",
-        options: {
-          endorserDid,
-          endorserMode: "internal",
-        },
-        secret: {
-          seed: seed,
-        },
-      });
+      const [didCreationResult, seedString] = await createDid(
+        agent,
+        endorserDid,
+      );
 
       if (didCreationResult.didState.state === "failed") {
         res.status(500).send(didCreationResult.didState.reason);
