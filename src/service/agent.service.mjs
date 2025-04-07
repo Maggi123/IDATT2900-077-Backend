@@ -48,7 +48,7 @@ const credentialRequestToCredentialMapperFunction = async ({
   const issuanceDate = new Date();
   const expirationDate = new Date();
   expirationDate.setDate(
-    expirationDate.getDate() + issuanceSession.issuanceMetadata.validity,
+    expirationDate.getDate() + issuanceSession.issuanceMetadata.validityDays,
   );
 
   if (

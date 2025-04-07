@@ -19,7 +19,7 @@ html
                 let validityDuration = document.getElementById("validityDuration")
 
                 function setHref() {
-                    document.getElementById("generateOffer").href = `#{hospitalPrescriptionsPath}/${prescription.value}/offer?validity=${validityDuration.value}`
+                    document.getElementById("generateOffer").href = `#{hospitalPrescriptionsPath}/${prescription.value}/offer?validityDays=${validityDuration.value}`
                 }
                 setHref();
                 prescription.addEventListener("change", setHref);
