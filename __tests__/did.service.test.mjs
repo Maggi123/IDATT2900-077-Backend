@@ -2,6 +2,10 @@ import { DidsApi } from "@credo-ts/core";
 import { createDid } from "../src/service/did.service.mjs";
 
 describe("did service tests", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("createDid", () => {
     it("should return creation result and seed", async () => {
       const simpleAgentMock = {
