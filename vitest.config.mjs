@@ -5,7 +5,11 @@ export default defineConfig({
     globals: true,
     coverage: {
       provider: "v8",
-      exclude: [...configDefaults.coverage.exclude, "**/von-network/**"],
+      exclude: [
+        ...configDefaults.coverage.exclude,
+        "./von-network/**",
+        "./public/**",
+      ],
     },
     exclude: [
       ...configDefaults.exclude,
