@@ -1,10 +1,11 @@
 import express from "express";
 import request from "supertest";
+
+import { createDid } from "#src/service/did.service.mjs";
 import {
   DID_ROUTER_PATH,
   setupDidRouter,
 } from "#src/controller/did.controller.mjs";
-import { createDid } from "#src/service/did.service.mjs";
 
 describe("did controller tests", () => {
   let app;

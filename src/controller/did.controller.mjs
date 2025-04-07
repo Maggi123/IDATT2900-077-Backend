@@ -1,4 +1,5 @@
 import express from "express";
+
 import { createDid } from "#src/service/did.service.mjs";
 
 export const DID_ROUTER_PATH = "/did";

@@ -1,10 +1,4 @@
-import { sampleMedicationRequest } from "../__data__/smartSampleData.mjs";
-import {
-  getPrescriptionClaims,
-  createPrescriptionOffer,
-} from "#src/service/hospital.service.mjs";
 import { describe } from "vitest";
-import { MyLogger } from "#src/util/logger.mjs";
 import { EventEmitter, LogLevel } from "@credo-ts/core";
 import {
   OpenId4VcIssuanceSessionState,
@@ -12,6 +6,13 @@ import {
 } from "@credo-ts/openid4vc";
 import { OpenId4VcIssuanceSessionRecord } from "@credo-ts/openid4vc/build/openid4vc-issuer/repository";
 import { agentDependencies } from "@credo-ts/node";
+
+import { sampleMedicationRequest } from "../__data__/smartSampleData.mjs";
+import {
+  getPrescriptionClaims,
+  createPrescriptionOffer,
+} from "#src/service/hospital.service.mjs";
+import { MyLogger } from "#src/util/logger.mjs";
 
 describe("hospital tests", () => {
   afterEach(() => {

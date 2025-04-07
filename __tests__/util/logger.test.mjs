@@ -1,5 +1,6 @@
-import { MyLogger } from "#src/util/logger.mjs";
 import { LogLevel } from "@credo-ts/core";
+
+import { MyLogger } from "#src/util/logger.mjs";
 
 describe("logger tests", () => {
   const consoleErrorSpy = vi.spyOn(console, "error");

@@ -1,6 +1,7 @@
 import { OpenId4VcIssuerApi } from "@credo-ts/openid4vc";
-import { MyLogger } from "#src/util/logger.mjs";
 import { LogLevel } from "@credo-ts/core";
+
+import { MyLogger } from "#src/util/logger.mjs";
 import {
   createIssuer,
   display,
