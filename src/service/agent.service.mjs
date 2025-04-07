@@ -225,7 +225,7 @@ export async function setDid(agent) {
   return did;
 }
 
-const supportedCredentials = {
+export const supportedCredentials = {
   Prescription: {
     format: OpenId4VciCredentialFormatProfile.JwtVcJson,
     vct: "Prescription",
@@ -250,7 +250,7 @@ const supportedCredentials = {
   },
 };
 
-const display = [
+export const display = [
   {
     name: "Hospital",
     description: "A hospital",
