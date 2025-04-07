@@ -1,4 +1,4 @@
-import { MyLogger } from "../../src/util/logger.mjs";
+import { MyLogger } from "#src/util/logger.mjs";
 import { LogLevel } from "@credo-ts/core";
 
 describe("logger tests", () => {

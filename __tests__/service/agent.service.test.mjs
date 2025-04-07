@@ -1,11 +1,11 @@
 import { OpenId4VcIssuerApi } from "@credo-ts/openid4vc";
-import { MyLogger } from "../../src/util/logger.mjs";
+import { MyLogger } from "#src/util/logger.mjs";
 import { LogLevel } from "@credo-ts/core";
 import {
   createIssuer,
   display,
   supportedCredentials,
-} from "../../src/service/agent.service.mjs";
+} from "#src/service/agent.service.mjs";
 
 describe("agent service tests", () => {
   afterEach(() => {

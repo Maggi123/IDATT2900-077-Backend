@@ -3,8 +3,8 @@ import {
   OpenId4VcIssuerEvents,
 } from "@credo-ts/openid4vc";
 
-import { getRxNormInName } from "../util/prescriptionUtil.mjs";
-import { getMedicationRequest } from "./smart.service.mjs";
+import { getRxNormInName } from "#src/util/prescriptionUtil.mjs";
+import { getMedicationRequest } from "#src/service/smart.service.mjs";
 
 const RXNORM_SYSTEM_DEFINITION_URL =
   "http://www.nlm.nih.gov/research/umls/rxnorm";

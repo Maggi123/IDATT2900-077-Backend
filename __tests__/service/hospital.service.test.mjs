@@ -2,9 +2,9 @@ import { sampleMedicationRequest } from "../__data__/smartSampleData.mjs";
 import {
   getPrescriptionClaims,
   createPrescriptionOffer,
-} from "../../src/service/hospital.service.mjs";
+} from "#src/service/hospital.service.mjs";
 import { describe } from "vitest";
-import { MyLogger } from "../../src/util/logger.mjs";
+import { MyLogger } from "#src/util/logger.mjs";
 import { EventEmitter, LogLevel } from "@credo-ts/core";
 import {
   OpenId4VcIssuanceSessionState,
@@ -19,11 +19,11 @@ describe("hospital tests", () => {
   });
 
   describe("getPrescriptionClaims", () => {
-    vi.mock("../../src/util/prescriptionUtil.mjs", () => ({
+    vi.mock("#src/util/prescriptionUtil.mjs", () => ({
       getRxNormInName: vi.fn().mockResolvedValue(null),
     }));
 
-    vi.mock("../../src/service/smart.service.mjs", () => ({
+    vi.mock("#src/service/smart.service.mjs", () => ({
       getMedicationRequest: vi.fn().mockImplementation(async (id) => {
         if (`${id}` === sampleMedicationRequest.id)
           return sampleMedicationRequest;

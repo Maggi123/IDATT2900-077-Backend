@@ -1,4 +1,4 @@
-import { SMART_ROUTER_PATH } from "../controller/smart.controller.mjs";
+import { SMART_ROUTER_PATH } from "#src/controller/smart.controller.mjs";
 
 let fhirClient;
 

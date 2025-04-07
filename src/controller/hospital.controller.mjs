@@ -1,10 +1,10 @@
 import express from "express";
 
-import { createPrescriptionOffer } from "../service/hospital.service.mjs";
+import { createPrescriptionOffer } from "#src/service/hospital.service.mjs";
 import {
   getCheckSmartSessionMiddleware,
   getAllMedicationRequests,
-} from "../service/smart.service.mjs";
+} from "#src/service/smart.service.mjs";
 
 export const HOSPITAL_ROUTER_PATH = "/hospital";
 const HOSPITAL_PRESCRIPTIONS_PATH = `/prescriptions`;

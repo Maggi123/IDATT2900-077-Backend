@@ -1,4 +1,4 @@
-import { getRxNormInName } from "../../src/util/prescriptionUtil.mjs";
+import { getRxNormInName } from "#src/util/prescriptionUtil.mjs";
 import { rxNormSampleResponseData } from "../__data__/rxNormSampleData.mjs";
 
 describe("prescription util tests", () => {

@@ -1,8 +1,8 @@
 import express from "express";
 import smart from "fhirclient";
 
-import { setFhirClient } from "../service/smart.service.mjs";
-import { HOSPITAL_ROUTER_PATH } from "./hospital.controller.mjs";
+import { setFhirClient } from "#src/service/smart.service.mjs";
+import { HOSPITAL_ROUTER_PATH } from "#src/controller/hospital.controller.mjs";
 
 export const SMART_ROUTER_PATH = "/smart";
 
