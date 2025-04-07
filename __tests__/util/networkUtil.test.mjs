@@ -1,4 +1,4 @@
-import { getBackendPort, getBackendIp } from "../src/util/networkUtil.mjs";
+import { getBackendPort, getBackendIp } from "../../src/util/networkUtil.mjs";
 
 describe("network util tests", () => {
   describe("getBackendPort", () => {

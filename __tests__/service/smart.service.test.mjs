@@ -2,7 +2,7 @@ import {
   getMedicationRequest,
   getAllMedicationRequests,
   setFhirClient,
-} from "../src/service/smart.service.mjs";
+} from "../../src/service/smart.service.mjs";
 
 describe("smart tests", () => {
   const fhirClientMock = {
