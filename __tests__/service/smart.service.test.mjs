@@ -4,7 +4,7 @@ import {
   setFhirClient,
 } from "#src/service/smart.service.mjs";
 
-describe("smart tests", () => {
+describe("smart service tests", () => {
   const fhirClientMock = {
     request: vi.fn(),
   };

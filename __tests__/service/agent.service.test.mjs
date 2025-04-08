@@ -38,9 +38,7 @@ describe("agent service tests", () => {
         "createIssuer",
       );
 
-      getIssuerByIdMock.mockImplementation(() => {
-        throw new Error("does not exist");
-      });
+      getIssuerByIdMock.mockRejectedValue(new Error("does not exist"));
       createIssuerMock.mockImplementation(vi.fn());
 
       await createIssuer(simpleAgentMock, "issuer");

@@ -7,7 +7,7 @@ import {
   setupHospitalIssuerRouter,
 } from "#src/controller/hospital.issuer.controller.mjs";
 
-describe("hospital controller tests", () => {
+describe("hospital issuer controller tests", () => {
   let app;
   let server;
 

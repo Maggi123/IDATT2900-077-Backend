@@ -14,7 +14,7 @@ import {
 } from "#src/service/hospital.issuer.service.mjs";
 import { MyLogger } from "#src/util/logger.mjs";
 
-describe("hospital tests", () => {
+describe("hospital issuer service tests", () => {
   afterEach(() => {
     vi.resetAllMocks();
   });
