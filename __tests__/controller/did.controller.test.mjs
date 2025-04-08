@@ -19,7 +19,7 @@ describe("did controller tests", () => {
   beforeEach(() => {
     app = express();
     app.use(DID_ROUTER_PATH, setupDidRouter(undefined, undefined));
-    server = app.listen(3000);
+    server = app.listen(3001);
   });
 
   afterEach(() => {

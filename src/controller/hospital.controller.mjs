@@ -7,7 +7,7 @@ import {
 } from "#src/service/smart.service.mjs";
 
 export const HOSPITAL_ROUTER_PATH = "/hospital";
-const HOSPITAL_PRESCRIPTIONS_PATH = `/prescriptions`;
+export const HOSPITAL_PRESCRIPTIONS_PATH = `/prescriptions`;
 
 export function setupHospitalIssuerRouter(agent, issuerDid) {
   const router = express.Router();
