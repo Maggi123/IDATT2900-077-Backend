@@ -10,6 +10,8 @@ import {
   setDid,
   initializeAgent,
   OID4VCI_ROUTER_PATH,
+  createVerifer,
+  OID4VP_ROUTER_PATH,
 } from "./service/agent.service.mjs";
 import {
   HOSPITAL_ISSUER_ROUTER_PATH,
@@ -23,6 +25,10 @@ import {
   DID_ROUTER_PATH,
   setupDidRouter,
 } from "./controller/did.controller.mjs";
+import {
+  HOSPITAL_VERIFIER_ROUTER_PATH,
+  setupHospitalVerifierRouter,
+} from "#src/controller/hospital.verifier.controller.mjs";
 
 export async function setupApp() {
   const app = express();
@@ -69,6 +75,9 @@ export async function setupApp() {
   await createIssuer(agent, sovDid);
   app.use(OID4VCI_ROUTER_PATH, agent.modules.openid4VcIssuer.config.router);
 
+  await createVerifer(agent, sovDid);
+  app.use(OID4VP_ROUTER_PATH, agent.modules.openid4VcVerifier.config.router);
+
   const smartRouter = setupSmartRouter();
   app.use(SMART_ROUTER_PATH, smartRouter);
 
@@ -84,6 +93,7 @@ export async function setupApp() {
   app.get("/", (req, res) => {
     res.render("index", {
       smartLaunchPath: `${SMART_ROUTER_PATH}/launch`,
+      hospitalVerifierPath: `${HOSPITAL_VERIFIER_ROUTER_PATH}`,
     });
   });
 

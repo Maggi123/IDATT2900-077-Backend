@@ -1,0 +1,14 @@
+doctype html
+html
+    head
+        title Hospital Verifier - Prescriptions Verification
+        link(rel="stylesheet" href="/css/website.css")
+    body
+        div.container
+            h1 Prescriptions Verification
+            p#link= request
+            div#qrcode
+                img(src= data)
+            p Refresh page to generate new verification request
+            a(href = data download="qrcode.png")#download Download QR code
+            a(href= hospitalVerifierPath) Go back

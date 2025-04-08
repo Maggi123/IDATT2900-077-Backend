@@ -24,6 +24,7 @@ import {
 import {
   OpenId4VcIssuerModule,
   OpenId4VciCredentialFormatProfile,
+  OpenId4VcVerifierModule,
 } from "@credo-ts/openid4vc";
 import { AskarModule } from "@credo-ts/askar";
 import { askar } from "@openwallet-foundation/askar-nodejs";
@@ -33,6 +34,7 @@ import { getBackendIp, getBackendPort } from "#src/util/networkUtil.mjs";
 import { getPrescriptionClaims } from "#src/service/hospital.issuer.service.mjs";
 
 export const OID4VCI_ROUTER_PATH = "/oid4vci";
+export const OID4VP_ROUTER_PATH = "/siop";
 
 const credentialRequestToCredentialMapperFunction = async ({
   issuanceSession,
@@ -127,6 +129,9 @@ export async function initializeAgent(logger) {
         baseUrl: `http://${getBackendIp()}:${getBackendPort()}${OID4VCI_ROUTER_PATH}`,
         credentialRequestToCredentialMapper:
           credentialRequestToCredentialMapperFunction,
+      }),
+      openid4VcVerifier: new OpenId4VcVerifierModule({
+        baseUrl: `http://${getBackendIp()}:${getBackendPort()}${OID4VP_ROUTER_PATH}`,
       }),
     },
   });
@@ -284,5 +289,25 @@ export async function createIssuer(agent, issuerId) {
     issuerId: issuerId,
     display: display,
     credentialConfigurationsSupported: supportedCredentials,
+  });
+}
+
+export async function createVerifer(agent, verifierId) {
+  let verifierRecord;
+
+  try {
+    verifierRecord =
+      await agent.modules.openid4VcVerifier.getVerifierByVerifierId(verifierId);
+  } catch (e) {
+    agent.config.logger.error(e);
+    agent.config.logger.info(
+      "No verifier record stored, creating new verifier.",
+    );
+  }
+
+  if (verifierRecord) return;
+
+  await agent.modules.openid4VcVerifier.createVerifier({
+    verifierId: verifierId,
   });
 }
