@@ -13,13 +13,13 @@ html
                 label(for="validityDuration") Validity duration (in days):
                 input(type="number" min=1 max=365 value=1)#validityDuration
             a#generateOffer Generate offer
-            a(href="/hospital") Go back
+            a(href= hospitalPath) Go back
             script.
                 let prescription = document.getElementById("prescription");
                 let validityDuration = document.getElementById("validityDuration")
 
                 function setHref() {
-                    document.getElementById("generateOffer").href = `/hospital/prescriptions/${prescription.value}/offer?validity=${validityDuration.value}`
+                    document.getElementById("generateOffer").href = `#{hospitalPrescriptionsPath}/${prescription.value}/offer?validityDays=${validityDuration.value}`
                 }
                 setHref();
                 prescription.addEventListener("change", setHref);

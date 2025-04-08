@@ -1,5 +1,6 @@
 import { BaseLogger, LogLevel } from "@credo-ts/core";
 
+// Based on @credo-ts/core ConsoleLogger
 export class MyLogger extends BaseLogger {
   test(message, data) {
     if (!this.isEnabled(LogLevel.test)) return;
