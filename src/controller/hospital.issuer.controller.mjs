@@ -5,6 +5,7 @@ import { createPrescriptionOffer } from "#src/service/hospital.issuer.service.mj
 import {
   getCheckSmartSessionMiddleware,
   getAllMedicationRequests,
+  getMedicationRequest,
 } from "#src/service/smart.service.mjs";
 
 export const HOSPITAL_ISSUER_ROUTER_PATH = "/issuer/hospital";
@@ -43,6 +44,17 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
 
   router.get(
     `${HOSPITAL_ISSUER_PRESCRIPTIONS_PATH}/:id/offer`,
+    async (req, res, next) => {
+      try {
+        await getMedicationRequest(req.params.id);
+        next();
+      } catch (error) {
+        agent.config.logger.error(
+          `MedicationRequest with id ${req.params.id} does not exist. Error: ${error}`,
+        );
+        res.status(404).send();
+      }
+    },
     async (req, res, next) => {
       try {
         const offer = await createPrescriptionOffer(
