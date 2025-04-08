@@ -1,9 +1,10 @@
-import { OpenId4VcIssuerApi } from "@credo-ts/openid4vc";
+import { OpenId4VcIssuerApi, OpenId4VcVerifierApi } from "@credo-ts/openid4vc";
 import { LogLevel } from "@credo-ts/core";
 
 import { MyLogger } from "#src/util/logger.mjs";
 import {
   createIssuer,
+  createVerifier,
   display,
   supportedCredentials,
 } from "#src/service/agent.service.mjs";
@@ -72,6 +73,57 @@ describe("agent service tests", () => {
         display: display,
         credentialConfigurationsSupported: supportedCredentials,
       });
+    });
+  });
+
+  describe("createVerifier", () => {
+    const simpleAgentMock = {
+      modules: {
+        openid4VcVerifier: new OpenId4VcVerifierApi(
+          undefined,
+          undefined,
+          undefined,
+        ),
+      },
+      config: {
+        logger: new MyLogger(LogLevel.off),
+      },
+    };
+
+    const createVerifierMock = vi.spyOn(
+      simpleAgentMock.modules.openid4VcVerifier,
+      "createVerifier",
+    );
+
+    const getVerifierByVerifierIdMock = vi.spyOn(
+      simpleAgentMock.modules.openid4VcVerifier,
+      "getVerifierByVerifierId",
+    );
+
+    it("should create new verifier if it does not exist", async () => {
+      getVerifierByVerifierIdMock.mockRejectedValue(
+        new Error("does not exist"),
+      );
+      createVerifierMock.mockImplementation(vi.fn());
+
+      await createVerifier(simpleAgentMock, "verifier");
+
+      expect(getVerifierByVerifierIdMock).toHaveBeenCalledTimes(1);
+      expect(getVerifierByVerifierIdMock).toHaveBeenCalledWith("verifier");
+      expect(createVerifierMock).toHaveBeenCalledTimes(1);
+      expect(createVerifierMock).toHaveBeenCalledWith({
+        verifierId: "verifier",
+      });
+    });
+
+    it("should not create enw verifier if it exists", async () => {
+      getVerifierByVerifierIdMock.mockResolvedValue("verifier");
+
+      await createVerifier(simpleAgentMock, "verifier");
+
+      expect(getVerifierByVerifierIdMock).toHaveBeenCalledTimes(1);
+      expect(getVerifierByVerifierIdMock).toHaveBeenCalledWith("verifier");
+      expect(createVerifierMock).toHaveBeenCalledTimes(0);
     });
   });
 });
