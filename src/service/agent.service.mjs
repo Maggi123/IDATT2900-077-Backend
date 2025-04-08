@@ -292,7 +292,7 @@ export async function createIssuer(agent, issuerId) {
   });
 }
 
-export async function createVerifer(agent, verifierId) {
+export async function createVerifier(agent, verifierId) {
   let verifierRecord;
 
   try {

@@ -10,7 +10,7 @@ import {
   setDid,
   initializeAgent,
   OID4VCI_ROUTER_PATH,
-  createVerifer,
+  createVerifier,
   OID4VP_ROUTER_PATH,
 } from "./service/agent.service.mjs";
 import {
@@ -75,7 +75,7 @@ export async function setupApp() {
   await createIssuer(agent, sovDid);
   app.use(OID4VCI_ROUTER_PATH, agent.modules.openid4VcIssuer.config.router);
 
-  await createVerifer(agent, sovDid);
+  await createVerifier(agent, sovDid);
   app.use(OID4VP_ROUTER_PATH, agent.modules.openid4VcVerifier.config.router);
 
   const smartRouter = setupSmartRouter();
