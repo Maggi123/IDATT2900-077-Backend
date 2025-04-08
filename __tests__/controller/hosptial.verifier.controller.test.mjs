@@ -33,7 +33,7 @@ describe("hospital verifier controller tests", () => {
     );
     app.use(express.static("public"));
     app.set("view engine", "pug");
-    server = app.listen(3002);
+    server = app.listen(3003);
   });
 
   afterEach(() => {
