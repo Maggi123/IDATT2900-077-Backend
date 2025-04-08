@@ -30,7 +30,7 @@ import { askar } from "@openwallet-foundation/askar-nodejs";
 import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
 
 import { getBackendIp, getBackendPort } from "#src/util/networkUtil.mjs";
-import { getPrescriptionClaims } from "#src/service/hospital.service.mjs";
+import { getPrescriptionClaims } from "#src/service/hospital.issuer.service.mjs";
 
 export const OID4VCI_ROUTER_PATH = "/oid4vci";
 

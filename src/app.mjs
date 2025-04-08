@@ -12,9 +12,9 @@ import {
   OID4VCI_ROUTER_PATH,
 } from "./service/agent.service.mjs";
 import {
-  HOSPITAL_ROUTER_PATH,
+  HOSPITAL_ISSUER_ROUTER_PATH,
   setupHospitalIssuerRouter,
-} from "./controller/hospital.controller.mjs";
+} from "./controller/hospital.issuer.controller.mjs";
 import {
   setupSmartRouter,
   SMART_ROUTER_PATH,
@@ -72,8 +72,11 @@ export async function setupApp() {
   const smartRouter = setupSmartRouter();
   app.use(SMART_ROUTER_PATH, smartRouter);
 
-  const hospitalRouter = setupHospitalIssuerRouter(agent, sovDid);
-  app.use(HOSPITAL_ROUTER_PATH, hospitalRouter);
+  const hospitalIssuerRouter = setupHospitalIssuerRouter(agent, sovDid);
+  app.use(HOSPITAL_ISSUER_ROUTER_PATH, hospitalIssuerRouter);
+
+  const hospitalVerifierRouter = setupHospitalVerifierRouter(agent, sovDid);
+  app.use(HOSPITAL_VERIFIER_ROUTER_PATH, hospitalVerifierRouter);
 
   const didRouter = setupDidRouter(agent, did);
   app.use(DID_ROUTER_PATH, didRouter);

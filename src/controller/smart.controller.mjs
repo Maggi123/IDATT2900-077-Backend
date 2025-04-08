@@ -2,7 +2,7 @@ import express from "express";
 import smart from "fhirclient";
 
 import { setFhirClient } from "#src/service/smart.service.mjs";
-import { HOSPITAL_ROUTER_PATH } from "#src/controller/hospital.controller.mjs";
+import { HOSPITAL_ISSUER_ROUTER_PATH } from "#src/controller/hospital.issuer.controller.mjs";
 
 export const SMART_ROUTER_PATH = "/smart";
 
@@ -22,11 +22,11 @@ export function setupSmartRouter() {
 
   router.get("/redirect", async (req, res) => {
     setFhirClient(await smart(req, res).ready());
-    res.redirect(HOSPITAL_ROUTER_PATH);
+    res.redirect(HOSPITAL_ISSUER_ROUTER_PATH);
   });
 
   router.get("/session_expired", (req, res) => {
-    res.render("hospital/sessionExpired");
+    res.render("hospital/issuer/sessionExpired");
   });
 
   return router;

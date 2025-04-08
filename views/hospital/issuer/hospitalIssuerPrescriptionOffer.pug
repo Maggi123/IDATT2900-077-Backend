@@ -3,13 +3,12 @@ html
     head
         title Hospital Issuer - Prescription Offer
         link(rel="stylesheet" href="/css/website.css")
-        script(src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js")
     body
         div.container
             h1 Prescription Offer
-            p#offer= offer
+            p#link= offer
             div#qrcode
+                img(src= data)
             p Refresh page to generate new offer
-            a#download Download QR code
-            a(href= hospitalPrescriptionsPath) Go back
-            script(src="/scripts/offer.js")
+            a(href = data download="qrcode.png")#download Download QR code
+            a(href= hospitalIssuePrescriptionsPath) Go back
