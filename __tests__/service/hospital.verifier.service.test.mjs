@@ -54,23 +54,20 @@ describe("hospital verifier service tests", () => {
         },
         presentationExchange: {
           definition: {
-            id: "hospital_prescription_verification",
+            id: "Hospital Prescription Verification",
+            purpose:
+              "We need to verify your prescriptions to dispense medications",
             input_descriptors: [
               {
-                id: "Prescription",
+                id: "PrescriptionDescriptor",
                 name: "Prescription",
-                purpose:
-                  "We need to verify your prescriptions to dispense medications",
                 constraints: {
                   fields: [
                     {
-                      path: ["$.type"],
+                      path: ["$.type", "$.vc.type.*", "$.vct"],
                       filter: {
-                        type: "array",
-                        contains: {
-                          type: "string",
-                          pattern: "^Prescription",
-                        },
+                        type: "string",
+                        pattern: "Prescription",
                       },
                     },
                   ],
