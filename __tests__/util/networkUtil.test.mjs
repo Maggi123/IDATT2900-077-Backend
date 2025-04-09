@@ -1,6 +1,10 @@
 import { getBackendPort, getBackendIp } from "#src/util/networkUtil.mjs";
 
 describe("network util tests", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   describe("getBackendPort", () => {
     it("should return port 3000", () => {
       const port = getBackendPort();
@@ -17,7 +21,7 @@ describe("network util tests", () => {
     });
 
     it("should return env ip when set", () => {
-      process.env.BACKEND_IP = "10.0.0.1";
+      vi.stubEnv("BACKEND_IP", "10.0.0.1");
 
       const ip = getBackendIp();
 
