@@ -1,6 +1,7 @@
 body {
     background: #e9d3f6;
 }
+
 .container {
     display: flex;
     flex-direction: column;
@@ -9,10 +10,12 @@ body {
     height: 100vh;
     text-align: center;
 }
+
 .container h1 {
     font-size: 4rem;
     font-family: 'Open Sans', sans-serif;
 }
+
 .container a {
     display: inline-block;
     padding: 10px 20px;
@@ -26,12 +29,15 @@ body {
     text-align: center;
     transition: background-color 0.3s ease;
 }
+
 .container a:hover {
     background-color: #523c73;
 }
+
 .container p {
     font-size: 1.5rem;
 }
+
 .container select {
     display: inline-block;
     padding: 10px 20px;
@@ -46,12 +52,14 @@ body {
     appearance: none; /* Remove default arrow */
     cursor: pointer;
 }
+
 .container select:focus {
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
-#offer {
+
+#link {
     display: inline-block;
     padding: 10px 20px;
     margin: 10px 0;

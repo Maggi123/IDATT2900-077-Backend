@@ -2,12 +2,12 @@ import express from "express";
 import request from "supertest";
 
 import {
-  HOSPITAL_PRESCRIPTIONS_PATH,
-  HOSPITAL_ROUTER_PATH,
+  HOSPITAL_ISSUER_PRESCRIPTIONS_PATH,
+  HOSPITAL_ISSUER_ROUTER_PATH,
   setupHospitalIssuerRouter,
-} from "#src/controller/hospital.controller.mjs";
+} from "#src/controller/hospital.issuer.controller.mjs";
 
-describe("hospital controller tests", () => {
+describe("hospital issuer controller tests", () => {
   let app;
   let server;
 
@@ -29,12 +29,12 @@ describe("hospital controller tests", () => {
       }),
     };
   });
-  vi.mock("#src/service/hospital.service.mjs");
+  vi.mock("#src/service/hospital.issuer.service.mjs");
 
   beforeEach(() => {
     app = express();
     app.use(
-      HOSPITAL_ROUTER_PATH,
+      HOSPITAL_ISSUER_ROUTER_PATH,
       setupHospitalIssuerRouter(undefined, "issuer"),
     );
     app.use(express.static("public"));
@@ -50,13 +50,13 @@ describe("hospital controller tests", () => {
   });
 
   it("should send 200 when getting root route", async () => {
-    const response = await request(app).get(HOSPITAL_ROUTER_PATH);
+    const response = await request(app).get(HOSPITAL_ISSUER_ROUTER_PATH);
     expect(response.status).toBe(200);
   });
 
-  it(`should send 200 when getting ${HOSPITAL_ROUTER_PATH + HOSPITAL_PRESCRIPTIONS_PATH} route`, async () => {
+  it(`should send 200 when getting ${HOSPITAL_ISSUER_ROUTER_PATH + HOSPITAL_ISSUER_PRESCRIPTIONS_PATH} route`, async () => {
     const response = await request(app).get(
-      HOSPITAL_ROUTER_PATH + HOSPITAL_PRESCRIPTIONS_PATH,
+      HOSPITAL_ISSUER_ROUTER_PATH + HOSPITAL_ISSUER_PRESCRIPTIONS_PATH,
     );
     expect(response.status).toBe(200);
   });

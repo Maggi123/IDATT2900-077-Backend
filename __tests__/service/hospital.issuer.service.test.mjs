@@ -11,10 +11,10 @@ import { sampleMedicationRequest } from "../__data__/smartSampleData.mjs";
 import {
   getPrescriptionClaims,
   createPrescriptionOffer,
-} from "#src/service/hospital.service.mjs";
+} from "#src/service/hospital.issuer.service.mjs";
 import { MyLogger } from "#src/util/logger.mjs";
 
-describe("hospital tests", () => {
+describe("hospital issuer service tests", () => {
   afterEach(() => {
     vi.resetAllMocks();
   });
