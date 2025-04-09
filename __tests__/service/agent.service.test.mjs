@@ -1,17 +1,28 @@
 import { OpenId4VcIssuerApi, OpenId4VcVerifierApi } from "@credo-ts/openid4vc";
-import { LogLevel } from "@credo-ts/core";
+import { Agent, LogLevel } from "@credo-ts/core";
 
 import { MyLogger } from "#src/util/logger.mjs";
 import {
   createIssuer,
   createVerifier,
   display,
+  initializeAgent,
   supportedCredentials,
 } from "#src/service/agent.service.mjs";
+import axios from "axios";
 
 describe("agent service tests", () => {
+  const axiosGetMock = vi.hoisted(() => vi.fn());
+  vi.mock("@credo-ts/core");
+  vi.mock("axios", () => ({
+    default: {
+      get: axiosGetMock,
+    },
+  }));
+
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
   });
 
   describe("createIssuer", () => {
@@ -124,6 +135,46 @@ describe("agent service tests", () => {
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledTimes(1);
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledWith("verifier");
       expect(createVerifierMock).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe("initializeAgent", () => {
+    it("should try to fetch genesis transactions with undefined ip when environment variable is not set and initialize agent when fetch was successful", async () => {
+      axiosGetMock.mockResolvedValue({
+        status: 200,
+      });
+
+      const agent = await initializeAgent(new MyLogger(LogLevel.off));
+
+      expect(axios.get).toHaveBeenCalledTimes(1);
+      expect(axios.get).toHaveBeenCalledWith("http://undefined:9000/genesis");
+      expect(Agent.prototype.constructor).toHaveBeenCalledTimes(1);
+      expect(agent).toBeInstanceOf(Agent);
+    });
+
+    it("should try to fetch genesis transactions with undefined ip when environment variable is not set and throw error when fetch was not successful", async () => {
+      axiosGetMock.mockResolvedValue({
+        status: 500,
+      });
+
+      await expect(initializeAgent()).rejects.toThrow();
+      expect(axios.get).toHaveBeenCalledTimes(1);
+      expect(axios.get).toHaveBeenCalledWith("http://undefined:9000/genesis");
+      expect(Agent.prototype.constructor).toHaveBeenCalledTimes(0);
+    });
+
+    it("should try to fetch genesis transactions with defined ip when environment variable is set and initialize agent when fetch was successful", async () => {
+      vi.stubEnv("BACKEND_INDY_NETWORK_IP", "10.0.0.1");
+      axiosGetMock.mockResolvedValue({
+        status: 200,
+      });
+
+      const agent = await initializeAgent(new MyLogger(LogLevel.off));
+
+      expect(axios.get).toHaveBeenCalledTimes(1);
+      expect(axios.get).toHaveBeenCalledWith("http://10.0.0.1:9000/genesis");
+      expect(Agent.prototype.constructor).toHaveBeenCalledTimes(1);
+      expect(agent).toBeInstanceOf(Agent);
     });
   });
 });
