@@ -58,6 +58,7 @@ describe("hospital verifier service tests", () => {
             name: "Hospital Prescription Verification",
             purpose:
               "We need to verify your prescriptions to dispense medications.",
+            version: "v1.draft21",
             input_descriptors: [
               {
                 id: "PrescriptionDescriptor",
