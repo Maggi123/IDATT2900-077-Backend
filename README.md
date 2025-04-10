@@ -19,7 +19,7 @@
 11. Choose "Provider Standalone Launch" under "Launch Type"
 12. Write 1 under "Patient(s)" and write 3 under "Provider(s)"
 13. Copy the URL under "FHIR Server Url" and paste it in as the SMART_URL value in .env
-14. Open bash terminal in this project's folder
+14. Open a bash terminal in this project's folder
 15. Run "npm install"
 16. On Windows, activate the "Add the *.docker.internal names to host's /etc/hosts file" under General settings in Docker Desktop
 17. Run "git submodule update --init"
@@ -35,4 +35,4 @@ A web interface for the ledger can be found [here](http://localhost:9000)
 when the ledger is running.
 
 ### How to run after first time setup
-Execute steps 8, 15, 19 and 20.
+Execute steps 8, 14, 15, 19 and 20.
