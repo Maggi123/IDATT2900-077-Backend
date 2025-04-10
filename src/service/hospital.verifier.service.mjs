@@ -13,9 +13,10 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
       },
       presentationExchange: {
         definition: {
-          id: "Hospital Prescription Verification",
+          id: "hospital_prescription_verification",
+          name: "Hospital Prescription Verification",
           purpose:
-            "We need to verify your prescriptions to dispense medications",
+            "We need to verify your prescriptions to dispense medications.",
           input_descriptors: [
             {
               id: "PrescriptionDescriptor",
