@@ -11,6 +11,7 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
         didUrl: `${verifierId}#key-1`,
         method: "did",
       },
+      version: "v1.draft21",
       presentationExchange: {
         definition: {
           id: "hospital_prescription_verification",
@@ -49,7 +50,7 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
         OpenId4VcVerificationSessionState.ResponseVerified
       ) {
         const verifiedAuthorizationResponse =
-          await agent.modules.openId4VcVerifier.getVerifiedAuthorizationResponse(
+          await agent.modules.openid4VcVerifier.getVerifiedAuthorizationResponse(
             verificationSession.id,
           );
         console.log(
