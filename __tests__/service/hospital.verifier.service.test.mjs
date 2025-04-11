@@ -52,13 +52,13 @@ describe("hospital verifier service tests", () => {
           didUrl: `verifier#key-1`,
           method: "did",
         },
+        version: "v1.draft21",
         presentationExchange: {
           definition: {
             id: "hospital_prescription_verification",
             name: "Hospital Prescription Verification",
             purpose:
               "We need to verify your prescriptions to dispense medications.",
-            version: "v1.draft21",
             input_descriptors: [
               {
                 id: "PrescriptionDescriptor",
