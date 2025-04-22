@@ -2,6 +2,7 @@ import {
   OpenId4VcVerificationSessionState,
   OpenId4VcVerifierEvents,
 } from "@credo-ts/openid4vc";
+import { asArray } from "@credo-ts/core";
 
 export async function createPrescriptionVerificationRequest(agent, verifierId) {
   const { authorizationRequest, verificationSession } =
@@ -66,8 +67,16 @@ export async function registerSseEventListenerOnPrescriptionVerificationSession(
           verifiedAuthorizationResponse,
         );
 
+        const verifiablePresentations =
+          verifiedAuthorizationResponse.presentationExchange.presentations;
+
+        const data =
+          convertPrescriptionVerifiablePresentationToPrescriptionNames(
+            verifiablePresentations[0],
+          );
+
         res.write("event: verificationCompleted\n");
-        res.write(`data: ${JSON.stringify(verifiedAuthorizationResponse)}\n\n`);
+        res.write(`data: ${data}\n\n`);
 
         agent.events.off(
           OpenId4VcVerifierEvents.VerificationSessionStateChanged,
@@ -84,4 +93,16 @@ export async function registerSseEventListenerOnPrescriptionVerificationSession(
   );
 
   return handler;
+}
+
+export function convertPrescriptionVerifiablePresentationToPrescriptionNames(
+  prescriptionPresentation,
+) {
+  const credentials = asArray(prescriptionPresentation.verifiableCredential);
+
+  const prescriptionNames = credentials
+    .filter((credential) => credential.type.includes("Prescription"))
+    .map((credential) => asArray(credential.credentialSubject)[0].claims.name);
+
+  return prescriptionNames.join(", ");
 }

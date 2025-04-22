@@ -9,8 +9,10 @@ html
             p#link= request
             div#qrcode
                 img(src= data)
-            p Refresh page to generate new verification request
             a(href = data download="qrcode.png")#download Download QR code
+            p Refresh page to generate new verification request
+            p#receivedText Received and verified response successfully!
+            p#data
             a(href= hospitalVerifierPath) Go back
             script.
                 const eventSource = new EventSource("#{verificationSessionEventEndpoint}");
@@ -21,6 +23,9 @@ html
 
                 eventSource.addEventListener("verificationCompleted", (event) => {
                   console.log("Verification completed successfully.");
-                  console.log("Response data: ", JSON.parse(event.data));
+                  console.log("Response data: ", event.data);
+                  document.getElementById("receivedText").style.display = "inline-block";
+                  document.getElementById("data").style.display = "inline-block";
+                  document.getElementById("data").innerText = `Names of verified prescriptions: ${event.data}`;
                   eventSource.close();
                 })
