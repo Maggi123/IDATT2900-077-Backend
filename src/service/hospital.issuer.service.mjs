@@ -46,27 +46,37 @@ export async function createPrescriptionOffer(
 
   agent.events.on(
     OpenId4VcIssuerEvents.IssuanceSessionStateChanged,
-    function handler(event) {
-      if (event.payload.issuanceSession.id === issuanceSession.id) {
-        agent.config.logger.info(
-          "Issuance session state changed to ",
-          event.payload.issuanceSession.state,
-        );
-        if (
-          event.payload.issuanceSession.state ===
-          OpenId4VcIssuanceSessionState.Completed
-        ) {
-          agent.config.logger.info(
-            `Removing listener from issuanceSession with id: ${event.payload.issuanceSession.id}`,
-          );
-          agent.events.off(
-            OpenId4VcIssuerEvents.IssuanceSessionStateChanged,
-            handler,
-          );
-        }
-      }
-    },
+    getIssuanceSessionStateChangedEventHandlerForIssuanceSession(
+      agent,
+      issuanceSession.id,
+    ),
   );
 
   return credentialOffer;
+}
+
+export function getIssuanceSessionStateChangedEventHandlerForIssuanceSession(
+  agent,
+  issuanceSessionId,
+) {
+  return function handler(event) {
+    if (event.payload.issuanceSession.id === issuanceSessionId) {
+      agent.config.logger.info(
+        "Issuance session state changed to ",
+        event.payload.issuanceSession.state,
+      );
+      if (
+        event.payload.issuanceSession.state ===
+        OpenId4VcIssuanceSessionState.Completed
+      ) {
+        agent.config.logger.info(
+          `Removing listener from issuanceSession with id: ${event.payload.issuanceSession.id}`,
+        );
+        agent.events.off(
+          OpenId4VcIssuerEvents.IssuanceSessionStateChanged,
+          handler,
+        );
+      }
+    }
+  };
 }
