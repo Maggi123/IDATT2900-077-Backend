@@ -1,6 +1,6 @@
 import express from "express";
 import request from "supertest";
-import { LogLevel } from "@credo-ts/core";
+import { EventEmitter, LogLevel } from "@credo-ts/core";
 
 import {
   HOSPITAL_VERIFIER_PRESCRIPTIONS_PATH,
@@ -8,22 +8,46 @@ import {
   setupHospitalVerifierRouter,
 } from "#src/controller/hospital.verifier.controller.mjs";
 import { MyLogger } from "#src/util/logger.mjs";
+import {
+  OpenId4VcVerifierApi,
+  OpenId4VcVerifierEvents,
+} from "@credo-ts/openid4vc";
+import { EventSource } from "eventsource";
+import { agentDependencies } from "@credo-ts/node";
 
 describe("hospital verifier controller tests", () => {
   let app;
   let server;
 
   const createPrescriptionVerificationRequestMock = vi.hoisted(() => vi.fn());
+  const getPrescriptionVerificationSessionStateChangeHandlerMock = vi.hoisted(
+    () => vi.fn(),
+  );
   vi.mock("#src/service/hospital.verifier.service.mjs", () => ({
     createPrescriptionVerificationRequest:
       createPrescriptionVerificationRequestMock,
+    getPrescriptionVerificationSessionStateChangeHandler:
+      getPrescriptionVerificationSessionStateChangeHandlerMock,
   }));
 
   const simpleAgentMock = {
+    modules: {
+      openid4VcVerifier: new OpenId4VcVerifierApi(
+        undefined,
+        undefined,
+        undefined,
+      ),
+    },
+    events: new EventEmitter(agentDependencies, null),
     config: {
       logger: new MyLogger(LogLevel.off),
     },
   };
+
+  const getVerificationSessionByIdMock = vi.spyOn(
+    simpleAgentMock.modules.openid4VcVerifier,
+    "getVerificationSessionById",
+  );
 
   beforeEach(() => {
     app = express();
@@ -73,5 +97,55 @@ describe("hospital verifier controller tests", () => {
     );
     expect(response.status).toBe(200);
     expect(loggerErrorMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("should send 404 when getting SSE endpoint for verification session that does not exist", async () => {
+    getVerificationSessionByIdMock.mockRejectedValue(new Error("not found"));
+
+    const response = await request(app).get(
+      HOSPITAL_VERIFIER_ROUTER_PATH + "/verificationEvents/1",
+    );
+    expect(response.status).toBe(404);
+    expect(getVerificationSessionByIdMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("should write data when using EventSource with valid verification session SSE endpoint", async () => {
+    const mockHandlerFunction = vi.fn();
+    const eventsOnMock = vi.spyOn(simpleAgentMock.events, "on");
+    const eventsOffMock = vi.spyOn(simpleAgentMock.events, "off");
+
+    getVerificationSessionByIdMock.mockResolvedValue("exists");
+    getPrescriptionVerificationSessionStateChangeHandlerMock.mockResolvedValue(
+      mockHandlerFunction,
+    );
+
+    const eventSource = new EventSource(
+      `http://localhost:3003${HOSPITAL_VERIFIER_ROUTER_PATH}/verificationEvents/1`,
+    );
+    eventSource.onmessage = (event) => {
+      expect(event.data).toBe(
+        "Connected to event stream for verification session with id 1",
+      );
+      eventSource.close();
+    };
+
+    await vi.waitFor(() => {
+      if (eventSource.readyState !== EventSource.CLOSED) {
+        throw new Error("event source not closed");
+      }
+    });
+    expect(
+      getPrescriptionVerificationSessionStateChangeHandlerMock,
+    ).toHaveBeenCalledTimes(1);
+    expect(eventsOnMock).toHaveBeenCalledTimes(1);
+    expect(eventsOnMock).toHaveBeenCalledWith(
+      OpenId4VcVerifierEvents.VerificationSessionStateChanged,
+      mockHandlerFunction,
+    );
+    expect(eventsOffMock).toHaveBeenCalledTimes(1);
+    expect(eventsOffMock).toHaveBeenCalledWith(
+      OpenId4VcVerifierEvents.VerificationSessionStateChanged,
+      mockHandlerFunction,
+    );
   });
 });
