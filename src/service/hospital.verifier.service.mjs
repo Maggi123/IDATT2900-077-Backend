@@ -42,7 +42,7 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
   return [authorizationRequest, verificationSession.id];
 }
 
-export async function registerSseEventListenerOnVerificationSession(
+export async function registerSseEventListenerOnPrescriptionVerificationSession(
   agent,
   id,
   res,

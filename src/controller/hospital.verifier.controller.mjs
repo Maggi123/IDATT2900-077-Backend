@@ -1,7 +1,7 @@
 import express from "express";
 import {
   createPrescriptionVerificationRequest,
-  registerSseEventListenerOnVerificationSession,
+  registerSseEventListenerOnPrescriptionVerificationSession,
 } from "#src/service/hospital.verifier.service.mjs";
 import QRCode from "qrcode";
 import { OpenId4VcVerifierEvents } from "@credo-ts/openid4vc";
@@ -70,7 +70,7 @@ export function setupHospitalVerifierRouter(agent, verifierDid) {
       );
 
       const handlerFunction =
-        await registerSseEventListenerOnVerificationSession(
+        await registerSseEventListenerOnPrescriptionVerificationSession(
           agent,
           req.params.id,
           res,
