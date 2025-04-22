@@ -39,8 +39,16 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
       },
     });
 
+  return [authorizationRequest, verificationSession.id];
+}
+
+export async function registerSseEventListenerOnVerificationSession(
+  agent,
+  id,
+  res,
+) {
   const handler = async (event) => {
-    if (event.payload.verificationSession.id === verificationSession.id) {
+    if (event.payload.verificationSession.id === id) {
       agent.config.logger.info(
         "Verification session state changed to ",
         event.payload.verificationSession.state,
@@ -51,17 +59,21 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
       ) {
         const verifiedAuthorizationResponse =
           await agent.modules.openid4VcVerifier.getVerifiedAuthorizationResponse(
-            verificationSession.id,
+            id,
           );
-        console.log(
+        agent.config.logger.info(
           "Successfully verified presentation.",
-          JSON.stringify(verifiedAuthorizationResponse, null, 2),
+          verifiedAuthorizationResponse,
         );
+
+        res.write("event: verificationCompleted\n");
+        res.write(`data: ${JSON.stringify(verifiedAuthorizationResponse)}\n\n`);
 
         agent.events.off(
           OpenId4VcVerifierEvents.VerificationSessionStateChanged,
           handler,
         );
+        res.end();
       }
     }
   };
@@ -71,5 +83,5 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
     handler,
   );
 
-  return authorizationRequest;
+  return handler;
 }
