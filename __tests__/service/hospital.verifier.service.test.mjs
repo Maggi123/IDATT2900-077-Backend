@@ -8,29 +8,34 @@ import { agentDependencies } from "@credo-ts/node";
 import { createPrescriptionVerificationRequest } from "#src/service/hospital.verifier.service.mjs";
 
 describe("hospital verifier service tests", () => {
-  describe("createPrescriptionVerificationRequest", () => {
-    const simpleAgentMock = {
-      modules: {
-        openid4VcVerifier: new OpenId4VcVerifierApi(
-          undefined,
-          undefined,
-          undefined,
-        ),
-      },
-      events: new EventEmitter(agentDependencies, undefined),
-    };
+  const simpleAgentMock = {
+    modules: {
+      openid4VcVerifier: new OpenId4VcVerifierApi(
+        undefined,
+        undefined,
+        undefined,
+      ),
+    },
+    events: new EventEmitter(agentDependencies, undefined),
+  };
 
+  const eventOnMock = vi.spyOn(simpleAgentMock.events, "on");
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  describe("createPrescriptionVerificationRequest", () => {
     it("should create prescription verification request", async () => {
       const createAuthorizationRequestMock = vi.spyOn(
         simpleAgentMock.modules.openid4VcVerifier,
         "createAuthorizationRequest",
       );
 
-      const eventOnMock = vi.spyOn(simpleAgentMock.events, "on");
-
       createAuthorizationRequestMock.mockResolvedValue({
         authorizationRequest: "authorization-request",
         verificationSession: new OpenId4VcVerificationSessionRecord({
+          id: "id",
           verifierId: "verifier",
           state: OpenId4VcVerificationSessionState.RequestCreated,
           authorizationRequestId: "id",
@@ -44,7 +49,7 @@ describe("hospital verifier service tests", () => {
         "verifier",
       );
 
-      expect(result).toEqual("authorization-request");
+      expect(result).toEqual(["authorization-request", "id"]);
       expect(createAuthorizationRequestMock).toHaveBeenCalledTimes(1);
       expect(createAuthorizationRequestMock).toHaveBeenCalledWith({
         verifierId: "verifier",
@@ -79,7 +84,7 @@ describe("hospital verifier service tests", () => {
           },
         },
       });
-      expect(eventOnMock).toHaveBeenCalledTimes(1);
+      expect(eventOnMock).toHaveBeenCalledTimes(0);
     });
   });
 });

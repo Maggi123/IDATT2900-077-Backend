@@ -64,7 +64,7 @@ describe("hospital verifier controller tests", () => {
   });
 
   it(`should log error and send 200 when getting ${HOSPITAL_VERIFIER_ROUTER_PATH + HOSPITAL_VERIFIER_PRESCRIPTIONS_PATH} and request link can not be converted to QR code`, async () => {
-    createPrescriptionVerificationRequestMock.mockResolvedValue(null);
+    createPrescriptionVerificationRequestMock.mockResolvedValue([null, null]);
 
     const loggerErrorMock = vi.spyOn(simpleAgentMock.config.logger, "error");
 
