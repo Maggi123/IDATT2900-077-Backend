@@ -43,7 +43,7 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
   return [authorizationRequest, verificationSession.id];
 }
 
-export async function registerSseEventListenerOnPrescriptionVerificationSession(
+export async function getPrescriptionVerificationSessionStateChangeHandler(
   agent,
   id,
   res,
@@ -86,11 +86,6 @@ export async function registerSseEventListenerOnPrescriptionVerificationSession(
       }
     }
   };
-
-  agent.events.on(
-    OpenId4VcVerifierEvents.VerificationSessionStateChanged,
-    handler,
-  );
 
   return handler;
 }
