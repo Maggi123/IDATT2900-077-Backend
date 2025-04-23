@@ -1,6 +1,6 @@
 import express from "express";
 import request from "supertest";
-import { LogLevel } from "@credo-ts/core";
+import { parseDid, LogLevel } from "@credo-ts/core";
 
 import {
   HOSPITAL_ISSUER_PRESCRIPTIONS_PATH,
@@ -40,6 +40,13 @@ describe("hospital issuer controller tests", () => {
   vi.mock("#src/service/hospital.issuer.service.mjs", () => ({
     createPrescriptionOffer: vi.fn().mockResolvedValue("offer"),
   }));
+  vi.mock("@credo-ts/core", async () => {
+    const originalModule = await vi.importActual("@credo-ts/core");
+    return {
+      ...originalModule,
+      parseDid: vi.fn(originalModule.parseDid),
+    };
+  });
 
   const simpleAgentMock = {
     config: {
@@ -79,17 +86,20 @@ describe("hospital issuer controller tests", () => {
 
   it(`should send 200 when getting ${HOSPITAL_ISSUER_ROUTER_PATH + HOSPITAL_ISSUER_PRESCRIPTIONS_PATH}/:id/offer with valid id and query parameters`, async () => {
     const response = await request(app).get(
-      `${HOSPITAL_ISSUER_ROUTER_PATH + HOSPITAL_ISSUER_PRESCRIPTIONS_PATH}/100/offer?validity=1`,
+      `${HOSPITAL_ISSUER_ROUTER_PATH + HOSPITAL_ISSUER_PRESCRIPTIONS_PATH}/100/offer?validity=1&recipient=did:example:123`,
     );
     expect(response.status).toBe(200);
     expect(getMedicationRequest).toHaveBeenCalledTimes(1);
     expect(getMedicationRequest).toHaveBeenCalledWith("100");
+    expect(parseDid).toHaveBeenCalledTimes(1);
+    expect(parseDid).toHaveBeenCalledWith("did:example:123");
     expect(createPrescriptionOffer).toHaveBeenCalledTimes(1);
     expect(createPrescriptionOffer).toHaveBeenCalledWith(
       simpleAgentMock,
       "issuer",
       "100",
       1,
+      "did:example:123",
     );
   });
 
@@ -100,6 +110,19 @@ describe("hospital issuer controller tests", () => {
     expect(response.status).toBe(404);
     expect(getMedicationRequest).toHaveBeenCalledTimes(1);
     expect(getMedicationRequest).toHaveBeenCalledWith("1");
+    expect(parseDid).toHaveBeenCalledTimes(0);
+    expect(createPrescriptionOffer).toHaveBeenCalledTimes(0);
+  });
+
+  it(`should send 200 but nop create offer when getting ${HOSPITAL_ISSUER_ROUTER_PATH + HOSPITAL_ISSUER_PRESCRIPTIONS_PATH} with invalid recipient did`, async () => {
+    const response = await request(app).get(
+      `${HOSPITAL_ISSUER_ROUTER_PATH + HOSPITAL_ISSUER_PRESCRIPTIONS_PATH}/100/offer?validity=1&recipient=sheesh`,
+    );
+    expect(response.status).toBe(200);
+    expect(getMedicationRequest).toHaveBeenCalledTimes(1);
+    expect(getMedicationRequest).toHaveBeenCalledWith("100");
+    expect(parseDid).toHaveBeenCalledTimes(1);
+    expect(parseDid).toHaveBeenCalledWith("sheesh");
     expect(createPrescriptionOffer).toHaveBeenCalledTimes(0);
   });
 });
