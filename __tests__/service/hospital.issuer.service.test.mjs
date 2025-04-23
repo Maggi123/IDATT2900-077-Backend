@@ -87,6 +87,7 @@ describe("hospital issuer service tests", () => {
         "test",
         1,
         1,
+        "did:example:123",
       );
 
       expect(result).toBe(mockedCredentialOfferReturn.credentialOffer);
@@ -100,6 +101,7 @@ describe("hospital issuer service tests", () => {
         issuanceMetadata: {
           prescriptionId: 1,
           validityDays: 1,
+          recipientDid: "did:example:123",
         },
       });
       expect(eventOnMock).toHaveBeenCalledTimes(1);
