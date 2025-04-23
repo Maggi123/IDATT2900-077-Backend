@@ -12,15 +12,25 @@ html
             div.inputContainer
                 label(for="validityDuration") Validity duration (in days):
                 input(type="number" min=1 max=365 value=1)#validityDuration
+            div.inputContainer
+                label(for="recipientDid") Recipient DID (required):
+                input(type="text")#recipientDid
             a#generateOffer Generate offer
             a(href= hospitalIssuerPath) Go back
             script.
                 let prescription = document.getElementById("prescription");
-                let validityDuration = document.getElementById("validityDuration")
+                let validityDuration = document.getElementById("validityDuration");
+                let recipientDid = document.getElementById("recipientDid");
 
                 function setHref() {
-                    document.getElementById("generateOffer").href = `#{hospitalIssuePrescriptionsPath}/${prescription.value}/offer?validityDays=${validityDuration.value}`
+                    document.getElementById("generateOffer").style.display = (recipientDid.value.length > 0) ? "inline" : "none";
+                    document.getElementById("generateOffer").href =
+                      `#{hospitalIssuePrescriptionsPath}` +
+                      `/${prescription.value}` +
+                      `/offer?validityDays=${encodeURIComponent(validityDuration.value)}` +
+                      `&recipient=${encodeURIComponent(recipientDid.value)}`;
                 }
                 setHref();
                 prescription.addEventListener("change", setHref);
                 validityDuration.addEventListener("change", setHref);
+                recipientDid.addEventListener("change", setHref);

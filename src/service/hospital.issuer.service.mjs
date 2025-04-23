@@ -30,6 +30,7 @@ export async function createPrescriptionOffer(
   issuerId,
   prescriptionId,
   validityDays,
+  recipientDid,
 ) {
   const { credentialOffer, issuanceSession } =
     await agent.modules.openid4VcIssuer.createCredentialOffer({
@@ -41,6 +42,7 @@ export async function createPrescriptionOffer(
       issuanceMetadata: {
         prescriptionId: prescriptionId,
         validityDays: validityDays,
+        recipientDid: recipientDid,
       },
     });
 

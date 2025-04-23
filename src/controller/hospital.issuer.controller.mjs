@@ -1,5 +1,6 @@
 import express from "express";
 import QRCode from "qrcode";
+import { parseDid } from "@credo-ts/core";
 
 import { createPrescriptionOffer } from "#src/service/hospital.issuer.service.mjs";
 import {
@@ -57,6 +58,17 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
     },
     async (req, res, next) => {
       try {
+        parseDid(req.query.recipient);
+        next();
+      } catch (error) {
+        agent.config.logger.error(
+          `Invalid DID in query parameter recipient. Error: ${error}`,
+        );
+        res.render("hospital/issuer/invalidDid");
+      }
+    },
+    async (req, res, next) => {
+      try {
         const offer = await createPrescriptionOffer(
           agent,
           issuerDid,
@@ -64,7 +76,10 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
           !isNaN(parseInt(req.query.validityDays))
             ? parseInt(req.query.validityDays)
             : 1,
+          req.query.recipient,
         );
+
+        agent.config.logger.info("Recipient DID: " + req.query.recipient);
 
         let data = null;
         try {
