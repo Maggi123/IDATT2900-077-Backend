@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "src/server.mjs",
   "scripts": {
+    "dev": "node src/server.mjs",
     "test": "vitest",
     "coverage": "vitest run --coverage"
   },
