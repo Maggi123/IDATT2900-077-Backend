@@ -2,6 +2,7 @@ import {
   OpenId4VcVerificationSessionState,
   OpenId4VcVerifierEvents,
 } from "@credo-ts/openid4vc";
+import { asArray } from "@credo-ts/core";
 
 export async function createPrescriptionVerificationRequest(agent, verifierId) {
   const { authorizationRequest, verificationSession } =
@@ -11,25 +12,24 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
         didUrl: `${verifierId}#key-1`,
         method: "did",
       },
+      version: "v1.draft21",
       presentationExchange: {
         definition: {
           id: "hospital_prescription_verification",
+          name: "Hospital Prescription Verification",
+          purpose:
+            "We need to verify your prescriptions to dispense medications.",
           input_descriptors: [
             {
-              id: "Prescription",
+              id: "PrescriptionDescriptor",
               name: "Prescription",
-              purpose:
-                "We need to verify your prescriptions to dispense medications",
               constraints: {
                 fields: [
                   {
-                    path: ["$.type"],
+                    path: ["$.type", "$.vc.type.*", "$.vct"],
                     filter: {
-                      type: "array",
-                      contains: {
-                        type: "string",
-                        pattern: "^Prescription",
-                      },
+                      type: "string",
+                      pattern: "Prescription",
                     },
                   },
                 ],
@@ -40,8 +40,16 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
       },
     });
 
+  return [authorizationRequest, verificationSession.id];
+}
+
+export async function getPrescriptionVerificationSessionStateChangeHandler(
+  agent,
+  id,
+  res,
+) {
   const handler = async (event) => {
-    if (event.payload.verificationSession.id === verificationSession.id) {
+    if (event.payload.verificationSession.id === id) {
       agent.config.logger.info(
         "Verification session state changed to ",
         event.payload.verificationSession.state,
@@ -51,26 +59,45 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
         OpenId4VcVerificationSessionState.ResponseVerified
       ) {
         const verifiedAuthorizationResponse =
-          await agent.modules.openId4VcVerifier.getVerifiedAuthorizationResponse(
-            verificationSession.id,
+          await agent.modules.openid4VcVerifier.getVerifiedAuthorizationResponse(
+            id,
           );
-        console.log(
+        agent.config.logger.info(
           "Successfully verified presentation.",
-          JSON.stringify(verifiedAuthorizationResponse, null, 2),
+          verifiedAuthorizationResponse,
         );
+
+        const verifiablePresentations =
+          verifiedAuthorizationResponse.presentationExchange.presentations;
+
+        const data =
+          convertPrescriptionVerifiablePresentationToPrescriptionNames(
+            verifiablePresentations[0],
+          );
+
+        res.write("event: verificationCompleted\n");
+        res.write(`data: ${data}\n\n`);
 
         agent.events.off(
           OpenId4VcVerifierEvents.VerificationSessionStateChanged,
           handler,
         );
+        res.end();
       }
     }
   };
 
-  agent.events.on(
-    OpenId4VcVerifierEvents.VerificationSessionStateChanged,
-    handler,
-  );
+  return handler;
+}
 
-  return authorizationRequest;
+export function convertPrescriptionVerifiablePresentationToPrescriptionNames(
+  prescriptionPresentation,
+) {
+  const credentials = asArray(prescriptionPresentation.verifiableCredential);
+
+  const prescriptionNames = credentials
+    .filter((credential) => credential.type.includes("Prescription"))
+    .map((credential) => asArray(credential.credentialSubject)[0].claims.name);
+
+  return prescriptionNames.join(", ");
 }

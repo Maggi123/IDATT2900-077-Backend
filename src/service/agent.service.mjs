@@ -63,6 +63,13 @@ const credentialRequestToCredentialMapperFunction = async ({
       credentials: holderBindings.map((holderBinding) => {
         if (!holderBinding.didUrl)
           throw new Error("Did not receive only DID holder bindings.");
+        if (
+          parseDid(holderBinding.didUrl).did !==
+          parseDid(issuanceSession.issuanceMetadata.recipientDid).did
+        )
+          throw new Error(
+            "Holder supplied bindings not matching did of intended recipient.",
+          );
         return {
           credential: new W3cCredential({
             type: credentialConfiguration.credential_definition.type,

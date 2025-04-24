@@ -7,8 +7,10 @@ body {
     flex-direction: column;
     justify-content: start;
     align-items: center;
-    height: 100vh;
+    height: 90vh;
     text-align: center;
+    padding: 2.5vh;
+    margin: 2.5vh;
 }
 
 .container h1 {
@@ -107,6 +109,23 @@ body {
     font-size: 16px;
     color: #333;
     background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#receivedText {
+    display: none;
+}
+
+#data {
+    display: none;
+    padding: 10px 20px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    color: #333;
+    background-color: #f0f0f0;
     border: 1px solid #ccc;
     border-radius: 5px;
     text-align: center;

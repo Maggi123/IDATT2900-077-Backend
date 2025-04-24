@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "src/server.mjs",
   "scripts": {
+    "dev": "node src/server.mjs",
     "test": "vitest",
     "coverage": "vitest run --coverage"
   },
@@ -34,6 +35,7 @@
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.0.2",
     "eslint-plugin-prettier": "^5.2.3",
+    "eventsource": "^3.0.6",
     "globals": "^16.0.0",
     "prettier": "3.5.3",
     "supertest": "^7.1.0",

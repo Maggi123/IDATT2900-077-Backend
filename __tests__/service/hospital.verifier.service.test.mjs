@@ -2,24 +2,56 @@ import {
   OpenId4VcVerificationSessionRecord,
   OpenId4VcVerificationSessionState,
   OpenId4VcVerifierApi,
+  OpenId4VcVerifierEvents,
 } from "@credo-ts/openid4vc";
 import { EventEmitter } from "@credo-ts/core";
 import { agentDependencies } from "@credo-ts/node";
-import { createPrescriptionVerificationRequest } from "#src/service/hospital.verifier.service.mjs";
+import {
+  convertPrescriptionVerifiablePresentationToPrescriptionNames,
+  createPrescriptionVerificationRequest,
+  getPrescriptionVerificationSessionStateChangeHandler,
+} from "#src/service/hospital.verifier.service.mjs";
+import { MyLogger } from "#src/util/logger.mjs";
 
 describe("hospital verifier service tests", () => {
-  describe("createPrescriptionVerificationRequest", () => {
-    const simpleAgentMock = {
-      modules: {
-        openid4VcVerifier: new OpenId4VcVerifierApi(
-          undefined,
-          undefined,
-          undefined,
-        ),
-      },
-      events: new EventEmitter(agentDependencies, undefined),
-    };
+  const simpleAgentMock = {
+    modules: {
+      openid4VcVerifier: new OpenId4VcVerifierApi(
+        undefined,
+        undefined,
+        undefined,
+      ),
+    },
+    config: {
+      logger: new MyLogger(),
+    },
+    events: new EventEmitter(agentDependencies, undefined),
+  };
 
+  const mockPresentation = {
+    verifiableCredential: [
+      {
+        type: ["Prescription"],
+        credentialSubject: {
+          claims: {
+            name: "name",
+          },
+        },
+      },
+    ],
+  };
+
+  const loggerInfoMock = vi.spyOn(simpleAgentMock.config.logger, "info");
+
+  const responseMock = vi.fn();
+  responseMock.write = vi.fn();
+  responseMock.end = vi.fn();
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  describe("createPrescriptionVerificationRequest", () => {
     it("should create prescription verification request", async () => {
       const createAuthorizationRequestMock = vi.spyOn(
         simpleAgentMock.modules.openid4VcVerifier,
@@ -31,6 +63,7 @@ describe("hospital verifier service tests", () => {
       createAuthorizationRequestMock.mockResolvedValue({
         authorizationRequest: "authorization-request",
         verificationSession: new OpenId4VcVerificationSessionRecord({
+          id: "id",
           verifierId: "verifier",
           state: OpenId4VcVerificationSessionState.RequestCreated,
           authorizationRequestId: "id",
@@ -44,7 +77,7 @@ describe("hospital verifier service tests", () => {
         "verifier",
       );
 
-      expect(result).toEqual("authorization-request");
+      expect(result).toEqual(["authorization-request", "id"]);
       expect(createAuthorizationRequestMock).toHaveBeenCalledTimes(1);
       expect(createAuthorizationRequestMock).toHaveBeenCalledWith({
         verifierId: "verifier",
@@ -52,25 +85,24 @@ describe("hospital verifier service tests", () => {
           didUrl: `verifier#key-1`,
           method: "did",
         },
+        version: "v1.draft21",
         presentationExchange: {
           definition: {
             id: "hospital_prescription_verification",
+            name: "Hospital Prescription Verification",
+            purpose:
+              "We need to verify your prescriptions to dispense medications.",
             input_descriptors: [
               {
-                id: "Prescription",
+                id: "PrescriptionDescriptor",
                 name: "Prescription",
-                purpose:
-                  "We need to verify your prescriptions to dispense medications",
                 constraints: {
                   fields: [
                     {
-                      path: ["$.type"],
+                      path: ["$.type", "$.vc.type.*", "$.vct"],
                       filter: {
-                        type: "array",
-                        contains: {
-                          type: "string",
-                          pattern: "^Prescription",
-                        },
+                        type: "string",
+                        pattern: "Prescription",
                       },
                     },
                   ],
@@ -80,7 +112,119 @@ describe("hospital verifier service tests", () => {
           },
         },
       });
-      expect(eventOnMock).toHaveBeenCalledTimes(1);
+      expect(eventOnMock).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe("getPrescriptionVerificationSessionStateChangeHandler", () => {
+    it("should return function", async () => {
+      const handlerFunction =
+        await getPrescriptionVerificationSessionStateChangeHandler(
+          simpleAgentMock,
+          "id",
+          responseMock,
+        );
+
+      expect(typeof handlerFunction).toEqual("function");
+    });
+
+    it("should return handler function that logs state change when event verification session id is equal to id parameter", async () => {
+      const handlerFunction =
+        await getPrescriptionVerificationSessionStateChangeHandler(
+          simpleAgentMock,
+          "id",
+          responseMock,
+        );
+
+      const mockEvent = {
+        payload: {
+          verificationSession: {
+            id: "id",
+            state: OpenId4VcVerificationSessionState.RequestCreated,
+          },
+        },
+      };
+
+      await handlerFunction(mockEvent);
+
+      expect(typeof handlerFunction).toEqual("function");
+      expect(loggerInfoMock).toHaveBeenCalledTimes(1);
+      expect(loggerInfoMock).toHaveBeenCalledWith(
+        `Verification session state changed to `,
+        OpenId4VcVerificationSessionState.RequestCreated,
+      );
+    });
+
+    it("should return handler function that writes an SSE to response object and removes event listener when verification session is done", async () => {
+      const eventOffMock = vi.spyOn(simpleAgentMock.events, "off");
+      const getVerifiedAuthorizationResponseMock = vi.spyOn(
+        simpleAgentMock.modules.openid4VcVerifier,
+        "getVerifiedAuthorizationResponse",
+      );
+      getVerifiedAuthorizationResponseMock.mockResolvedValue({
+        presentationExchange: {
+          presentations: [mockPresentation],
+        },
+      });
+
+      const handlerFunction =
+        await getPrescriptionVerificationSessionStateChangeHandler(
+          simpleAgentMock,
+          "id",
+          responseMock,
+        );
+
+      const mockEvent = {
+        payload: {
+          verificationSession: {
+            id: "id",
+            state: OpenId4VcVerificationSessionState.ResponseVerified,
+          },
+        },
+      };
+
+      await handlerFunction(mockEvent);
+
+      expect(loggerInfoMock).toHaveBeenCalledTimes(2);
+      expect(eventOffMock).toHaveBeenCalledTimes(1);
+      expect(eventOffMock).toHaveBeenCalledWith(
+        OpenId4VcVerifierEvents.VerificationSessionStateChanged,
+        handlerFunction,
+      );
+      expect(responseMock.write).toHaveBeenCalledTimes(2);
+      expect(responseMock.write).toHaveBeenCalledWith(
+        "event: verificationCompleted\n",
+      );
+      expect(responseMock.write).toHaveBeenCalledWith(`data: name\n\n`);
+      expect(responseMock.end).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("convertPrescriptionVerifiablePresentationToPrescriptionNames", () => {
+    it("should return string with prescription names when the presentation contains prescriptions", () => {
+      const string =
+        convertPrescriptionVerifiablePresentationToPrescriptionNames(
+          mockPresentation,
+        );
+
+      expect(string).toEqual("name");
+    });
+
+    it("should return empty string when the presentation contains no prescriptions", () => {
+      const mockPresentation = {
+        verifiableCredential: [
+          {
+            type: ["Credential"],
+          },
+        ],
+      };
+
+      const string =
+        convertPrescriptionVerifiablePresentationToPrescriptionNames(
+          mockPresentation,
+        );
+
+      expect(string).toEqual("");
     });
   });
 });

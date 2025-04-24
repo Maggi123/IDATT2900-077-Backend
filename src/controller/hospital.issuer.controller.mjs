@@ -1,10 +1,12 @@
 import express from "express";
 import QRCode from "qrcode";
+import { parseDid } from "@credo-ts/core";
 
 import { createPrescriptionOffer } from "#src/service/hospital.issuer.service.mjs";
 import {
   getCheckSmartSessionMiddleware,
   getAllMedicationRequests,
+  getMedicationRequest,
 } from "#src/service/smart.service.mjs";
 
 export const HOSPITAL_ISSUER_ROUTER_PATH = "/issuer/hospital";
@@ -45,6 +47,28 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
     `${HOSPITAL_ISSUER_PRESCRIPTIONS_PATH}/:id/offer`,
     async (req, res, next) => {
       try {
+        await getMedicationRequest(req.params.id);
+        next();
+      } catch (error) {
+        agent.config.logger.error(
+          `MedicationRequest with id ${req.params.id} does not exist. Error: ${error}`,
+        );
+        res.status(404).send();
+      }
+    },
+    async (req, res, next) => {
+      try {
+        parseDid(req.query.recipient);
+        next();
+      } catch (error) {
+        agent.config.logger.error(
+          `Invalid DID in query parameter recipient. Error: ${error}`,
+        );
+        res.render("hospital/issuer/invalidDid");
+      }
+    },
+    async (req, res, next) => {
+      try {
         const offer = await createPrescriptionOffer(
           agent,
           issuerDid,
@@ -52,7 +76,10 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
           !isNaN(parseInt(req.query.validityDays))
             ? parseInt(req.query.validityDays)
             : 1,
+          req.query.recipient,
         );
+
+        agent.config.logger.info("Recipient DID: " + req.query.recipient);
 
         let data = null;
         try {

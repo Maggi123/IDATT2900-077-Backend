@@ -1,6 +1,10 @@
 import express from "express";
-import { createPrescriptionVerificationRequest } from "#src/service/hospital.verifier.service.mjs";
+import {
+  createPrescriptionVerificationRequest,
+  getPrescriptionVerificationSessionStateChangeHandler,
+} from "#src/service/hospital.verifier.service.mjs";
 import QRCode from "qrcode";
+import { OpenId4VcVerifierEvents } from "@credo-ts/openid4vc";
 
 export const HOSPITAL_VERIFIER_ROUTER_PATH = "/verifier/hospital";
 export const HOSPITAL_VERIFIER_PRESCRIPTIONS_PATH = "/prescriptions";
@@ -17,7 +21,7 @@ export function setupHospitalVerifierRouter(agent, verifierDid) {
 
   router.get(HOSPITAL_VERIFIER_PRESCRIPTIONS_PATH, async (req, res, next) => {
     try {
-      const request = await createPrescriptionVerificationRequest(
+      const [request, id] = await createPrescriptionVerificationRequest(
         agent,
         verifierDid,
       );
@@ -35,11 +39,57 @@ export function setupHospitalVerifierRouter(agent, verifierDid) {
         request: request,
         data: data,
         hospitalVerifierPath: HOSPITAL_VERIFIER_ROUTER_PATH,
+        verificationSessionEventEndpoint: `${HOSPITAL_VERIFIER_ROUTER_PATH}/verificationEvents/${id}`,
       });
     } catch (err) {
       next(err);
     }
   });
+
+  router.get(
+    "/verificationEvents/:id",
+    async (req, res, next) => {
+      try {
+        await agent.modules.openid4VcVerifier.getVerificationSessionById(
+          req.params.id,
+        );
+        next();
+      } catch (err) {
+        agent.config.logger.error(
+          `Verification session with id ${req.params.id} not found: ${err}`,
+        );
+        res.status(404).send();
+      }
+    },
+    async (req, res) => {
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Connection", "keep-alive");
+
+      res.write(
+        `data: Connected to event stream for verification session with id ${req.params.id}\n\n`,
+      );
+
+      const handlerFunction =
+        await getPrescriptionVerificationSessionStateChangeHandler(
+          agent,
+          req.params.id,
+          res,
+        );
+
+      agent.events.on(
+        OpenId4VcVerifierEvents.VerificationSessionStateChanged,
+        handlerFunction,
+      );
+
+      req.on("close", () => {
+        agent.events.off(
+          OpenId4VcVerifierEvents.VerificationSessionStateChanged,
+          handlerFunction,
+        );
+        res.end();
+      });
+    },
+  );
 
   return router;
 }
