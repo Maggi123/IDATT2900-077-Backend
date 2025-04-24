@@ -3,8 +3,7 @@ import readline from "readline";
 
 import axios from "axios";
 
-import { OpenId4VcIssuerApi, OpenId4VcVerifierApi } from "@credo-ts/openid4vc";
-import { Agent, DidsApi, LogLevel } from "@credo-ts/core";
+import { Agent, LogLevel } from "@credo-ts/core";
 import { vol } from "memfs";
 
 import { MyLogger } from "#src/util/logger.mjs";
@@ -16,6 +15,7 @@ import {
   setDid,
   supportedCredentials,
 } from "#src/service/agent.service.mjs";
+import { getSimpleAgentMock } from "../helpers/mockAgent.mjs";
 
 vi.mock("fs");
 
@@ -28,6 +28,8 @@ describe("agent service tests", () => {
     },
   }));
 
+  const simpleAgentMock = getSimpleAgentMock(LogLevel.off);
+
   beforeEach(() => {
     fs.mkdirSync(process.cwd(), { recursive: true });
   });
@@ -39,19 +41,6 @@ describe("agent service tests", () => {
   });
 
   describe("createIssuer", () => {
-    const simpleAgentMock = {
-      modules: {
-        openid4VcIssuer: new OpenId4VcIssuerApi(
-          undefined,
-          undefined,
-          undefined,
-        ),
-      },
-      config: {
-        logger: new MyLogger(LogLevel.off),
-      },
-    };
-
     const getIssuerByIdMock = vi.spyOn(
       simpleAgentMock.modules.openid4VcIssuer,
       "getIssuerByIssuerId",
@@ -101,20 +90,6 @@ describe("agent service tests", () => {
   });
 
   describe("createVerifier", () => {
-    const simpleAgentMock = {
-      modules: {
-        openid4VcVerifier: new OpenId4VcVerifierApi(
-          undefined,
-          undefined,
-          undefined,
-        ),
-      },
-      config: {
-        logger: new MyLogger(LogLevel.off),
-      },
-      dids: new DidsApi(undefined, undefined, undefined, undefined, undefined),
-    };
-
     const createVerifierMock = vi.spyOn(
       simpleAgentMock.modules.openid4VcVerifier,
       "createVerifier",
@@ -193,13 +168,6 @@ describe("agent service tests", () => {
   });
 
   describe("setDid", () => {
-    const simpleAgentMock = {
-      config: {
-        logger: new MyLogger(LogLevel.off),
-      },
-      dids: new DidsApi(undefined, undefined, undefined, undefined, undefined),
-    };
-
     const readFileSyncSpy = vi.spyOn(fs, "readFileSync");
     const getCreatedDidsMock = vi.spyOn(simpleAgentMock.dids, "getCreatedDids");
 

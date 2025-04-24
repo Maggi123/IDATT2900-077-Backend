@@ -9,7 +9,7 @@ import {
 } from "#src/controller/hospital.issuer.controller.mjs";
 import { getMedicationRequest } from "#src/service/smart.service.mjs";
 import { createPrescriptionOffer } from "#src/service/hospital.issuer.service.mjs";
-import { MyLogger } from "#src/util/logger.mjs";
+import { getSimpleAgentMock } from "../helpers/mockAgent.mjs";
 
 describe("hospital issuer controller tests", () => {
   let app;
@@ -48,11 +48,7 @@ describe("hospital issuer controller tests", () => {
     };
   });
 
-  const simpleAgentMock = {
-    config: {
-      logger: new MyLogger(LogLevel.off),
-    },
-  };
+  const simpleAgentMock = getSimpleAgentMock(LogLevel.off);
 
   beforeEach(() => {
     app = express();

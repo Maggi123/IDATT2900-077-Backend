@@ -6,8 +6,8 @@ import {
   setFhirClient,
   getCheckSmartSessionMiddleware,
 } from "#src/service/smart.service.mjs";
-import { MyLogger } from "#src/util/logger.mjs";
 import { SMART_ROUTER_PATH } from "#src/controller/smart.controller.mjs";
+import { getSimpleAgentMock } from "../helpers/mockAgent.mjs";
 
 describe("smart service tests", () => {
   const fhirClientMock = {
@@ -15,11 +15,7 @@ describe("smart service tests", () => {
     getState: vi.fn(),
   };
 
-  const simpleAgentMock = {
-    config: {
-      logger: new MyLogger(LogLevel.off),
-    },
-  };
+  const simpleAgentMock = getSimpleAgentMock(LogLevel.off);
 
   afterEach(() => {
     setFhirClient(undefined);
