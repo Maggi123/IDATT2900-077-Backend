@@ -190,4 +190,28 @@ describe("logger tests", () => {
       });
     });
   });
+
+  describe("replaceError", () => {
+    const logger = new MyLogger(LogLevel.off);
+
+    it("should not modify objects that are not errors", () => {
+      const object = {
+        data: "test",
+      };
+
+      const modifiedObject = logger.replaceError(null, object);
+
+      expect(modifiedObject).toBe(object);
+    });
+
+    it("should modify errors", () => {
+      const error = new Error("test");
+
+      const modifiedError = logger.replaceError(null, error);
+
+      expect(modifiedError).not.toBe(error);
+      expect(modifiedError.message).toBe("test");
+      expect(modifiedError.stack).toBe(error.stack);
+    });
+  });
 });
