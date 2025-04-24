@@ -1,5 +1,11 @@
+import fs from "fs";
+import readline from "readline";
+
+import axios from "axios";
+
 import { OpenId4VcIssuerApi, OpenId4VcVerifierApi } from "@credo-ts/openid4vc";
-import { Agent, LogLevel } from "@credo-ts/core";
+import { Agent, DidsApi, LogLevel } from "@credo-ts/core";
+import { vol } from "memfs";
 
 import { MyLogger } from "#src/util/logger.mjs";
 import {
@@ -7,9 +13,11 @@ import {
   createVerifier,
   display,
   initializeAgent,
+  setDid,
   supportedCredentials,
 } from "#src/service/agent.service.mjs";
-import axios from "axios";
+
+vi.mock("fs");
 
 describe("agent service tests", () => {
   const axiosGetMock = vi.hoisted(() => vi.fn());
@@ -20,9 +28,14 @@ describe("agent service tests", () => {
     },
   }));
 
+  beforeEach(() => {
+    fs.mkdirSync(process.cwd(), { recursive: true });
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();
+    vol.reset();
   });
 
   describe("createIssuer", () => {
@@ -99,6 +112,7 @@ describe("agent service tests", () => {
       config: {
         logger: new MyLogger(LogLevel.off),
       },
+      dids: new DidsApi(undefined, undefined, undefined, undefined, undefined),
     };
 
     const createVerifierMock = vi.spyOn(
@@ -175,6 +189,140 @@ describe("agent service tests", () => {
       expect(axios.get).toHaveBeenCalledWith("http://10.0.0.1:9000/genesis");
       expect(Agent.prototype.constructor).toHaveBeenCalledTimes(1);
       expect(agent).toBeInstanceOf(Agent);
+    });
+  });
+
+  describe("setDid", () => {
+    const simpleAgentMock = {
+      config: {
+        logger: new MyLogger(LogLevel.off),
+      },
+      dids: new DidsApi(undefined, undefined, undefined, undefined, undefined),
+    };
+
+    const readFileSyncSpy = vi.spyOn(fs, "readFileSync");
+    const getCreatedDidsMock = vi.spyOn(simpleAgentMock.dids, "getCreatedDids");
+
+    const createInterfaceMock = vi.spyOn(readline, "createInterface");
+    const mockInterface = {
+      question: vi.fn().mockImplementation((_, callback) => {
+        callback("answer");
+      }),
+      close: vi.fn(),
+    };
+    createInterfaceMock.mockReturnValue(mockInterface);
+
+    const createMock = vi.spyOn(simpleAgentMock.dids, "create");
+
+    it("should return the did in the did.txt file if one is already created", async () => {
+      getCreatedDidsMock.mockResolvedValue(["did"]);
+
+      fs.writeFileSync("did.txt", "did");
+
+      const did = await setDid(simpleAgentMock);
+
+      expect(did).toBe("did");
+      expect(getCreatedDidsMock).toHaveBeenCalledTimes(1);
+      expect(getCreatedDidsMock).toHaveBeenCalledWith({ method: "indy" });
+      expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
+      expect(readFileSyncSpy).toHaveBeenCalledWith("did.txt");
+    });
+
+    it("should exit process if did.txt file does not exist", async () => {
+      const exitSpy = vi.spyOn(process, "exit");
+      exitSpy.mockImplementation(vi.fn());
+
+      getCreatedDidsMock.mockResolvedValue(["did"]);
+
+      const did = await setDid(simpleAgentMock);
+
+      expect(did).toBeUndefined();
+      expect(getCreatedDidsMock).toHaveBeenCalledTimes(1);
+      expect(getCreatedDidsMock).toHaveBeenCalledWith({ method: "indy" });
+      expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
+      expect(readFileSyncSpy).toHaveBeenCalledWith("did.txt");
+      expect(exitSpy).toHaveBeenCalledTimes(1);
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it("should create a did if there are none", async () => {
+      createMock.mockResolvedValue({
+        didState: {
+          nymRequest: JSON.stringify({
+            operation: {
+              verkey: "verkey",
+            },
+          }),
+          did: "did:example:123",
+          state: "finished",
+        },
+      });
+
+      const importMock = vi.spyOn(simpleAgentMock.dids, "import");
+      importMock.mockImplementation(vi.fn());
+
+      const writeFileSpy = vi.spyOn(fs, "writeFile");
+
+      getCreatedDidsMock.mockResolvedValue([]);
+
+      const did = await setDid(simpleAgentMock);
+
+      expect(did).toBe("did:example:123");
+      expect(getCreatedDidsMock).toHaveBeenCalledTimes(1);
+      expect(getCreatedDidsMock).toHaveBeenCalledWith({ method: "indy" });
+      expect(createInterfaceMock).toHaveBeenCalledTimes(1);
+      expect(createInterfaceMock).toHaveBeenCalledWith({
+        input: process.stdin,
+        output: process.stdout,
+      });
+      expect(mockInterface.question).toHaveBeenCalledTimes(2);
+      expect(createMock).toHaveBeenCalledTimes(1);
+      expect(createMock).toHaveBeenCalledWith({
+        method: "indy",
+        options: {
+          endorserDid: "did:indy:local:answer",
+          endorserMode: "external",
+        },
+      });
+      expect(importMock).toHaveBeenCalledTimes(1);
+      expect(importMock).toHaveBeenCalledWith({
+        did: "did:example:123",
+      });
+      expect(writeFileSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should create a did if there are none and exit if the process fails", async () => {
+      createMock.mockResolvedValue({
+        didState: {
+          state: "failed",
+        },
+      });
+
+      getCreatedDidsMock.mockResolvedValue([]);
+
+      const exitSpy = vi.spyOn(process, "exit");
+      exitSpy.mockImplementation(vi.fn());
+
+      await setDid(simpleAgentMock);
+
+      expect(getCreatedDidsMock).toHaveBeenCalledTimes(1);
+      expect(getCreatedDidsMock).toHaveBeenCalledWith({ method: "indy" });
+      expect(createInterfaceMock).toHaveBeenCalledTimes(1);
+      expect(createInterfaceMock).toHaveBeenCalledWith({
+        input: process.stdin,
+        output: process.stdout,
+      });
+      expect(mockInterface.question).toHaveBeenCalledTimes(1);
+      expect(createMock).toHaveBeenCalledTimes(1);
+      expect(createMock).toHaveBeenCalledWith({
+        method: "indy",
+        options: {
+          endorserDid: "did:indy:local:answer",
+          endorserMode: "external",
+        },
+      });
+      expect(exitSpy).toHaveBeenCalledTimes(1);
+      expect(exitSpy).toHaveBeenCalledWith(1);
     });
   });
 });

@@ -134,6 +134,7 @@ describe("hospital verifier controller tests", () => {
         throw new Error("event source not closed");
       }
     });
+
     expect(
       getPrescriptionVerificationSessionStateChangeHandlerMock,
     ).toHaveBeenCalledTimes(1);

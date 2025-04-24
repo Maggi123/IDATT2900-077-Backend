@@ -11,6 +11,7 @@ import { sampleMedicationRequest } from "../__data__/smartSampleData.mjs";
 import {
   getPrescriptionClaims,
   createPrescriptionOffer,
+  getIssuanceSessionStateChangedEventHandlerForIssuanceSession,
 } from "#src/service/hospital.issuer.service.mjs";
 import { MyLogger } from "#src/util/logger.mjs";
 
@@ -105,6 +106,39 @@ describe("hospital issuer service tests", () => {
         },
       });
       expect(eventOnMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("getIssuanceSessionStateChangedEventHandlerForIssuanceSession", () => {
+    const simpleMockAgent = {
+      config: {
+        logger: new MyLogger(LogLevel.off),
+      },
+    };
+
+    const loggerInfoSpy = vi.spyOn(simpleMockAgent.config.logger, "info");
+
+    it("should return a handler function that logs state change if is correct", () => {
+      const handlerFunction =
+        getIssuanceSessionStateChangedEventHandlerForIssuanceSession(
+          simpleMockAgent,
+          "id",
+        );
+
+      handlerFunction({
+        payload: {
+          issuanceSession: {
+            id: "id",
+            state: OpenId4VcIssuanceSessionState.OfferCreated,
+          },
+        },
+      });
+
+      expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
+      expect(loggerInfoSpy).toHaveBeenCalledWith(
+        "Issuance session state changed to ",
+        OpenId4VcIssuanceSessionState.OfferCreated,
+      );
     });
   });
 });
