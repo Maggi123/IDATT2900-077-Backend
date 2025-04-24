@@ -9,6 +9,7 @@ export default defineConfig({
         ...configDefaults.coverage.exclude,
         "./von-network/**",
         "./public/**",
+        "**/__mocks__/**",
       ],
     },
     exclude: [
