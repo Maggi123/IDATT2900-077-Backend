@@ -82,6 +82,9 @@ export function setupHospitalVerifierRouter(agent, verifierDid) {
       );
 
       req.on("close", () => {
+        agent.config.logger.debug(
+          `Verification session ${req.params.id} event stream closed.`,
+        );
         agent.events.off(
           OpenId4VcVerifierEvents.VerificationSessionStateChanged,
           handlerFunction,
