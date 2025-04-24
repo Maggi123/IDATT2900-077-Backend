@@ -37,6 +37,7 @@
     "eslint-plugin-prettier": "^5.2.3",
     "eventsource": "^3.0.6",
     "globals": "^16.0.0",
+    "memfs": "^4.17.0",
     "prettier": "3.5.3",
     "supertest": "^7.1.0",
     "tsx": "^4.19.3",
