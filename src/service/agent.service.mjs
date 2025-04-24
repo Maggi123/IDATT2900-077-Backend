@@ -1,4 +1,4 @@
-import readline from "node:readline";
+import readline from "readline";
 import fs from "fs";
 
 import axios from "axios";
@@ -182,6 +182,13 @@ export async function setDid(agent) {
       },
     });
 
+    if (backendDid.didState.state === "failed") {
+      agent.config.logger.error(
+        `Unable to create an endorser DID for backend. Cause: ${backendDid.didState.reason}`,
+      );
+      return process.exit(1);
+    }
+
     const nymRequest = JSON.parse(backendDid.didState.nymRequest);
     const didLastColonIndex = backendDid.didState.did.lastIndexOf(":");
     const didShort = backendDid.didState.did.substring(didLastColonIndex + 1);
@@ -207,13 +214,6 @@ export async function setDid(agent) {
     await agent.dids.import({
       did: backendDid.didState.did,
     });
-
-    if (backendDid.didState.state === "failed") {
-      agent.config.logger.error(
-        `Unable to create an endorser DID for backend. Cause: ${backendDid.didState.reason}`,
-      );
-      process.exit(1);
-    }
 
     did = backendDid.didState.did;
     fs.writeFile("did.txt", did, (err) => {
