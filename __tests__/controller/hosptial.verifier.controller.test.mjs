@@ -127,7 +127,13 @@ describe("hospital verifier controller tests", () => {
       OpenId4VcVerifierEvents.VerificationSessionStateChanged,
       mockHandlerFunction,
     );
-    expect(eventsOffMock).toHaveBeenCalledTimes(1);
+
+    await vi.waitFor(() => {
+      if (eventsOffMock.mock.calls.length !== 1) {
+        throw new Error("event off function not called");
+      }
+    });
+
     expect(eventsOffMock).toHaveBeenCalledWith(
       OpenId4VcVerifierEvents.VerificationSessionStateChanged,
       mockHandlerFunction,
