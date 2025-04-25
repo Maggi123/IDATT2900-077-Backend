@@ -1,32 +1,18 @@
 import {
   OpenId4VcVerificationSessionRecord,
   OpenId4VcVerificationSessionState,
-  OpenId4VcVerifierApi,
   OpenId4VcVerifierEvents,
 } from "@credo-ts/openid4vc";
-import { EventEmitter } from "@credo-ts/core";
-import { agentDependencies } from "@credo-ts/node";
+import { LogLevel } from "@credo-ts/core";
 import {
   convertPrescriptionVerifiablePresentationToPrescriptionNames,
   createPrescriptionVerificationRequest,
   getPrescriptionVerificationSessionStateChangeHandler,
 } from "#src/service/hospital.verifier.service.mjs";
-import { MyLogger } from "#src/util/logger.mjs";
+import { getSimpleAgentMock } from "../helpers/mockAgent.mjs";
 
 describe("hospital verifier service tests", () => {
-  const simpleAgentMock = {
-    modules: {
-      openid4VcVerifier: new OpenId4VcVerifierApi(
-        undefined,
-        undefined,
-        undefined,
-      ),
-    },
-    config: {
-      logger: new MyLogger(),
-    },
-    events: new EventEmitter(agentDependencies, undefined),
-  };
+  const simpleAgentMock = getSimpleAgentMock(LogLevel.off);
 
   const mockPresentation = {
     verifiableCredential: [

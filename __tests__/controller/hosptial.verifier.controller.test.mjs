@@ -1,19 +1,15 @@
 import express from "express";
 import request from "supertest";
-import { EventEmitter, LogLevel } from "@credo-ts/core";
+import { LogLevel } from "@credo-ts/core";
 
 import {
   HOSPITAL_VERIFIER_PRESCRIPTIONS_PATH,
   HOSPITAL_VERIFIER_ROUTER_PATH,
   setupHospitalVerifierRouter,
 } from "#src/controller/hospital.verifier.controller.mjs";
-import { MyLogger } from "#src/util/logger.mjs";
-import {
-  OpenId4VcVerifierApi,
-  OpenId4VcVerifierEvents,
-} from "@credo-ts/openid4vc";
+import { OpenId4VcVerifierEvents } from "@credo-ts/openid4vc";
 import { EventSource } from "eventsource";
-import { agentDependencies } from "@credo-ts/node";
+import { getSimpleAgentMock } from "../helpers/mockAgent.mjs";
 
 describe("hospital verifier controller tests", () => {
   let app;
@@ -30,19 +26,7 @@ describe("hospital verifier controller tests", () => {
       getPrescriptionVerificationSessionStateChangeHandlerMock,
   }));
 
-  const simpleAgentMock = {
-    modules: {
-      openid4VcVerifier: new OpenId4VcVerifierApi(
-        undefined,
-        undefined,
-        undefined,
-      ),
-    },
-    events: new EventEmitter(agentDependencies, null),
-    config: {
-      logger: new MyLogger(LogLevel.off),
-    },
-  };
+  const simpleAgentMock = getSimpleAgentMock(LogLevel.off);
 
   const getVerificationSessionByIdMock = vi.spyOn(
     simpleAgentMock.modules.openid4VcVerifier,
@@ -134,6 +118,7 @@ describe("hospital verifier controller tests", () => {
         throw new Error("event source not closed");
       }
     });
+
     expect(
       getPrescriptionVerificationSessionStateChangeHandlerMock,
     ).toHaveBeenCalledTimes(1);
@@ -142,7 +127,13 @@ describe("hospital verifier controller tests", () => {
       OpenId4VcVerifierEvents.VerificationSessionStateChanged,
       mockHandlerFunction,
     );
-    expect(eventsOffMock).toHaveBeenCalledTimes(1);
+
+    await vi.waitFor(() => {
+      if (eventsOffMock.mock.calls.length !== 1) {
+        throw new Error("event off function not called");
+      }
+    });
+
     expect(eventsOffMock).toHaveBeenCalledWith(
       OpenId4VcVerifierEvents.VerificationSessionStateChanged,
       mockHandlerFunction,

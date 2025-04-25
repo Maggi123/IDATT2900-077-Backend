@@ -22,6 +22,7 @@ describe("smart controller tests", () => {
     server.close((error) => {
       console.error(error);
     });
+    vi.unstubAllEnvs();
     vi.clearAllMocks();
   });
 
@@ -30,5 +31,12 @@ describe("smart controller tests", () => {
       `${SMART_ROUTER_PATH}/session_expired`,
     );
     expect(response.status).toBe(200);
+  });
+
+  it(`should send 500 when getting ${SMART_ROUTER_PATH}/launch route when smart server is not available`, async () => {
+    vi.stubEnv("SMART_URL", "undefined");
+
+    const response = await request(app).get(`${SMART_ROUTER_PATH}/launch`);
+    expect(response.status).toBe(500);
   });
 });

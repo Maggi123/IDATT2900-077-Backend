@@ -50,7 +50,7 @@ export async function setupApp() {
 
   if (!agent) {
     logger.fatal("No agent available");
-    process.exit(1);
+    return process.exit(1);
   }
 
   const did = await setDid(agent);

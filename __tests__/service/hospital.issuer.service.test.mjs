@@ -1,20 +1,18 @@
-import { describe } from "vitest";
-import { EventEmitter, LogLevel } from "@credo-ts/core";
-import {
-  OpenId4VcIssuanceSessionState,
-  OpenId4VcIssuerApi,
-} from "@credo-ts/openid4vc";
+import { LogLevel } from "@credo-ts/core";
+import { OpenId4VcIssuanceSessionState } from "@credo-ts/openid4vc";
 import { OpenId4VcIssuanceSessionRecord } from "@credo-ts/openid4vc/build/openid4vc-issuer/repository";
-import { agentDependencies } from "@credo-ts/node";
 
 import { sampleMedicationRequest } from "../__data__/smartSampleData.mjs";
 import {
   getPrescriptionClaims,
   createPrescriptionOffer,
+  getIssuanceSessionStateChangedEventHandlerForIssuanceSession,
 } from "#src/service/hospital.issuer.service.mjs";
-import { MyLogger } from "#src/util/logger.mjs";
+import { getSimpleAgentMock } from "../helpers/mockAgent.mjs";
 
 describe("hospital issuer service tests", () => {
+  const simpleAgentMock = getSimpleAgentMock(LogLevel.off);
+
   afterEach(() => {
     vi.resetAllMocks();
   });
@@ -48,27 +46,13 @@ describe("hospital issuer service tests", () => {
   });
 
   describe("createPrescriptionOffer", () => {
-    const verySimpleAgentMock = {
-      config: {
-        logger: new MyLogger(LogLevel.off),
-      },
-      events: new EventEmitter(agentDependencies, undefined),
-      modules: {
-        openid4VcIssuer: new OpenId4VcIssuerApi(
-          undefined,
-          undefined,
-          undefined,
-        ),
-      },
-    };
-
     it("should create prescription offer", async () => {
       const createCredentialOfferMock = vi.spyOn(
-        verySimpleAgentMock.modules.openid4VcIssuer,
+        simpleAgentMock.modules.openid4VcIssuer,
         "createCredentialOffer",
       );
 
-      const eventOnMock = vi.spyOn(verySimpleAgentMock.events, "on");
+      const eventOnMock = vi.spyOn(simpleAgentMock.events, "on");
 
       const mockedCredentialOfferReturn = {
         issuanceSession: new OpenId4VcIssuanceSessionRecord({
@@ -83,7 +67,7 @@ describe("hospital issuer service tests", () => {
       createCredentialOfferMock.mockResolvedValue(mockedCredentialOfferReturn);
 
       const result = await createPrescriptionOffer(
-        verySimpleAgentMock,
+        simpleAgentMock,
         "test",
         1,
         1,
@@ -105,6 +89,33 @@ describe("hospital issuer service tests", () => {
         },
       });
       expect(eventOnMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("getIssuanceSessionStateChangedEventHandlerForIssuanceSession", () => {
+    const loggerInfoSpy = vi.spyOn(simpleAgentMock.config.logger, "info");
+
+    it("should return a handler function that logs state change if is correct", () => {
+      const handlerFunction =
+        getIssuanceSessionStateChangedEventHandlerForIssuanceSession(
+          simpleAgentMock,
+          "id",
+        );
+
+      handlerFunction({
+        payload: {
+          issuanceSession: {
+            id: "id",
+            state: OpenId4VcIssuanceSessionState.OfferCreated,
+          },
+        },
+      });
+
+      expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
+      expect(loggerInfoSpy).toHaveBeenCalledWith(
+        "Issuance session state changed to ",
+        OpenId4VcIssuanceSessionState.OfferCreated,
+      );
     });
   });
 });

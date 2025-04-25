@@ -1,4 +1,4 @@
-import readline from "node:readline";
+import readline from "readline";
 import fs from "fs";
 
 import axios from "axios";
@@ -36,12 +36,12 @@ import { getPrescriptionClaims } from "#src/service/hospital.issuer.service.mjs"
 export const OID4VCI_ROUTER_PATH = "/oid4vci";
 export const OID4VP_ROUTER_PATH = "/siop";
 
-const credentialRequestToCredentialMapperFunction = async ({
+export async function credentialRequestToCredentialMapperFunction({
   issuanceSession,
   holderBindings,
   credentialConfigurationIds,
   credentialConfigurationsSupported: supported,
-}) => {
+}) {
   const credentialConfigurationId = credentialConfigurationIds[0];
   const credentialConfiguration = supported[credentialConfigurationId];
   const prescriptionClaims = await getPrescriptionClaims(
@@ -90,7 +90,7 @@ const credentialRequestToCredentialMapperFunction = async ({
   }
 
   throw new Error("Invalid credential request.");
-};
+}
 
 export async function initializeAgent(logger) {
   const transactionsRq = await axios.get(
@@ -182,6 +182,13 @@ export async function setDid(agent) {
       },
     });
 
+    if (backendDid.didState.state === "failed") {
+      agent.config.logger.error(
+        `Unable to create an endorser DID for backend. Cause: ${backendDid.didState.reason}`,
+      );
+      return process.exit(1);
+    }
+
     const nymRequest = JSON.parse(backendDid.didState.nymRequest);
     const didLastColonIndex = backendDid.didState.did.lastIndexOf(":");
     const didShort = backendDid.didState.did.substring(didLastColonIndex + 1);
@@ -207,13 +214,6 @@ export async function setDid(agent) {
     await agent.dids.import({
       did: backendDid.didState.did,
     });
-
-    if (backendDid.didState.state === "failed") {
-      agent.config.logger.error(
-        `Unable to create an endorser DID for backend. Cause: ${backendDid.didState.reason}`,
-      );
-      process.exit(1);
-    }
 
     did = backendDid.didState.did;
     fs.writeFile("did.txt", did, (err) => {
