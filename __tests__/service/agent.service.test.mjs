@@ -2,14 +2,21 @@ import fs from "fs";
 import readline from "readline";
 
 import axios from "axios";
-
-import { Agent, LogLevel } from "@credo-ts/core";
 import { vol } from "memfs";
+
+import {
+  Agent,
+  ClaimFormat,
+  LogLevel,
+  parseDid,
+  W3cCredential,
+} from "@credo-ts/core";
 
 import { MyLogger } from "#src/util/logger.mjs";
 import {
   createIssuer,
   createVerifier,
+  credentialRequestToCredentialMapperFunction,
   display,
   initializeAgent,
   setDid,
@@ -17,16 +24,16 @@ import {
 } from "#src/service/agent.service.mjs";
 import { getSimpleAgentMock } from "../helpers/mockAgent.mjs";
 
-vi.mock("fs");
-
 describe("agent service tests", () => {
   const axiosGetMock = vi.hoisted(() => vi.fn());
+  vi.mock("fs");
   vi.mock("@credo-ts/core");
   vi.mock("axios", () => ({
     default: {
       get: axiosGetMock,
     },
   }));
+  vi.mock("#src/service/hospital.issuer.service.mjs");
 
   const simpleAgentMock = getSimpleAgentMock(LogLevel.off);
 
@@ -291,6 +298,88 @@ describe("agent service tests", () => {
       });
       expect(exitSpy).toHaveBeenCalledTimes(1);
       expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe("credentialRequestToCredentialMapperFunction", async () => {
+    const actualParseDid = (await vi.importActual("@credo-ts/core")).parseDid;
+    parseDid.mockImplementation(actualParseDid);
+
+    const issuanceSession = {
+      issuerId: "did:example:456",
+      issuanceMetadata: {
+        prescriptionId: "1",
+        validityDays: "1",
+        recipientDid: "did:example:123",
+      },
+    };
+
+    const credentialConfigurationIds = ["Prescription"];
+
+    it("should return credentials when the holder binding is a DID and it equals the recipient DID", async () => {
+      const holderBindings = [
+        {
+          method: "did",
+          didUrl: "did:example:123",
+        },
+      ];
+
+      const credentialsForSigning =
+        await credentialRequestToCredentialMapperFunction({
+          issuanceSession,
+          credentialConfigurationIds,
+          holderBindings,
+          credentialConfigurationsSupported: supportedCredentials,
+        });
+
+      expect(credentialsForSigning).toBeDefined();
+      expect(credentialsForSigning.credentialConfigurationId).toBe(
+        "Prescription",
+      );
+      expect(credentialsForSigning.format).toBe(ClaimFormat.JwtVc);
+      expect(credentialsForSigning.credentials.length).toBe(1);
+      expect(
+        credentialsForSigning.credentials[0].credential instanceof
+          W3cCredential,
+      ).toBeTruthy();
+      expect(credentialsForSigning.credentials[0].verificationMethod).toBe(
+        "did:example:456#key-1",
+      );
+    });
+
+    it("should throw an error when the holder binding is a DID and it does not equal the recipient DID", async () => {
+      const holderBindings = [
+        {
+          method: "did",
+          didUrl: "did:example:789",
+        },
+      ];
+
+      await expect(
+        credentialRequestToCredentialMapperFunction({
+          issuanceSession,
+          credentialConfigurationIds,
+          holderBindings,
+          credentialConfigurationsSupported: supportedCredentials,
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("should throw an error when the holder binding is not a DID", async () => {
+      const holderBindings = [
+        {
+          key: "key",
+        },
+      ];
+
+      await expect(
+        credentialRequestToCredentialMapperFunction({
+          issuanceSession,
+          credentialConfigurationIds,
+          holderBindings,
+          credentialConfigurationsSupported: supportedCredentials,
+        }),
+      ).rejects.toThrow();
     });
   });
 });
