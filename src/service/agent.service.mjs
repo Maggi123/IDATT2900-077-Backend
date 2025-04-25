@@ -36,12 +36,12 @@ import { getPrescriptionClaims } from "#src/service/hospital.issuer.service.mjs"
 export const OID4VCI_ROUTER_PATH = "/oid4vci";
 export const OID4VP_ROUTER_PATH = "/siop";
 
-const credentialRequestToCredentialMapperFunction = async ({
+export async function credentialRequestToCredentialMapperFunction({
   issuanceSession,
   holderBindings,
   credentialConfigurationIds,
   credentialConfigurationsSupported: supported,
-}) => {
+}) {
   const credentialConfigurationId = credentialConfigurationIds[0];
   const credentialConfiguration = supported[credentialConfigurationId];
   const prescriptionClaims = await getPrescriptionClaims(
@@ -90,7 +90,7 @@ const credentialRequestToCredentialMapperFunction = async ({
   }
 
   throw new Error("Invalid credential request.");
-};
+}
 
 export async function initializeAgent(logger) {
   const transactionsRq = await axios.get(
