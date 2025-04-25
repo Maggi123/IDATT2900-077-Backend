@@ -6,11 +6,11 @@ import { parseIndyDid } from "@credo-ts/anoncreds";
 
 import { MyLogger } from "./util/logger.mjs";
 import {
-  createIssuer,
+  setupIssuer,
   setDid,
   initializeAgent,
   OID4VCI_ROUTER_PATH,
-  createVerifier,
+  setupVerifier,
   OID4VP_ROUTER_PATH,
 } from "./service/agent.service.mjs";
 import {
@@ -93,11 +93,11 @@ export async function setupApp() {
   app.set("view engine", "pug");
 
   // Sets up a hospital OID4VCI issuer
-  await createIssuer(agent, sovDid, hospitalDisplay);
+  await setupIssuer(agent, sovDid, hospitalDisplay);
   app.use(OID4VCI_ROUTER_PATH, agent.modules.openid4VcIssuer.config.router);
 
   // Sets up a hospital OID4VP verifier
-  await createVerifier(agent, sovDid);
+  await setupVerifier(agent, sovDid);
   app.use(OID4VP_ROUTER_PATH, agent.modules.openid4VcVerifier.config.router);
 
   // Registers routes for interacting with a SMART server

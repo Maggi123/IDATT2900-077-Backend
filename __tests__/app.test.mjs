@@ -2,8 +2,8 @@ import { LogLevel } from "@credo-ts/core";
 
 import { setupApp } from "#src/app.mjs";
 import {
-  createIssuer,
-  createVerifier,
+  setupIssuer,
+  setupVerifier,
   initializeAgent,
   setDid,
 } from "#src/service/agent.service.mjs";
@@ -41,8 +41,8 @@ describe("app tests", () => {
 
       initializeAgent.mockResolvedValue(simpleAgentMock);
       setDid.mockResolvedValue("did:indy:local:V4SGRU86Z58d6TV7PBUe6f");
-      createIssuer.mockImplementation(vi.fn());
-      createVerifier.mockImplementation(vi.fn());
+      setupIssuer.mockImplementation(vi.fn());
+      setupVerifier.mockImplementation(vi.fn());
 
       const [app, logger] = await setupApp();
 

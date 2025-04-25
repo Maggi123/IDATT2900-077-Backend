@@ -9,6 +9,13 @@ import { OpenId4VcVerifierEvents } from "@credo-ts/openid4vc";
 export const HOSPITAL_VERIFIER_ROUTER_PATH = "/verifier/hospital";
 export const HOSPITAL_VERIFIER_PRESCRIPTIONS_PATH = "/prescriptions";
 
+/**
+ * Set up the controller for the hospital verifier.
+ *
+ * @param agent the agent used for verification and logging.
+ * @param verifierDid the DID of the verifier.
+ * @returns the router for the hospital verifier.
+ */
 export function setupHospitalVerifierRouter(agent, verifierDid) {
   const router = express.Router();
 
@@ -48,6 +55,7 @@ export function setupHospitalVerifierRouter(agent, verifierDid) {
 
   router.get(
     "/verificationEvents/:id",
+    // Checks if the verification session with the given id exists
     async (req, res, next) => {
       try {
         await agent.modules.openid4VcVerifier.getVerificationSessionById(
@@ -61,6 +69,7 @@ export function setupHospitalVerifierRouter(agent, verifierDid) {
         res.status(404).send();
       }
     },
+    // Creates an event stream for the verification session with the given id
     async (req, res) => {
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Connection", "keep-alive");
@@ -81,6 +90,7 @@ export function setupHospitalVerifierRouter(agent, verifierDid) {
         handlerFunction,
       );
 
+      // Close the event stream when the client closes the connection.
       req.on("close", () => {
         agent.config.logger.debug(
           `Verification session ${req.params.id} event stream closed.`,
