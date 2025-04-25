@@ -31,6 +31,21 @@ import {
 } from "#src/controller/hospital.verifier.controller.mjs";
 import { hospitalDisplay } from "#src/service/hospital.issuer.service.mjs";
 
+/** @module app */
+
+/**
+ * Sets up the server application.
+ *
+ * - Sets up a logger
+ * - Initializes an agent
+ * - Sets DIDs used for OID4VCI and OID4VP services
+ * - Registers controllers on an express application
+ * - Registers root server route
+ *
+ * Exits the process early if the agent initialization fails.
+ *
+ * @returns {Promise<[Express, MyLogger]>} array of express application and logger
+ */
 export async function setupApp() {
   const app = express();
 
@@ -54,13 +69,17 @@ export async function setupApp() {
     return process.exit(1);
   }
 
+  // Sets the DID of the application.
+  // The application sets a DID with the sov method because credo-ts currently does not implement support
+  // for signing verifiable credentials or presentations with the indy method.
+  // The indy DID is nevertheless used for generating DIDs in the DID controller
   const did = await setDid(agent);
   const sovDid = `did:sov:${parseIndyDid(did).namespaceIdentifier}`;
   try {
     await agent.dids.resolveDidDocument(sovDid);
   } catch (error) {
     logger.error(
-      `Could not resolve legacy DID, unable to sign credentials. Cause: ${error}`,
+      `Could not resolve sov DID, unable to sign credentials or presentations. Cause: ${error}`,
     );
   }
 
@@ -73,25 +92,31 @@ export async function setupApp() {
   );
   app.set("view engine", "pug");
 
-  await createIssuer(agent, sovDid);
+  // Sets up a hospital OID4VCI issuer
   await createIssuer(agent, sovDid, hospitalDisplay);
   app.use(OID4VCI_ROUTER_PATH, agent.modules.openid4VcIssuer.config.router);
 
+  // Sets up a hospital OID4VP verifier
   await createVerifier(agent, sovDid);
   app.use(OID4VP_ROUTER_PATH, agent.modules.openid4VcVerifier.config.router);
 
+  // Registers routes for interacting with a SMART server
   const smartRouter = setupSmartRouter();
   app.use(SMART_ROUTER_PATH, smartRouter);
 
+  // Registers hospital issuer webpages
   const hospitalIssuerRouter = setupHospitalIssuerRouter(agent, sovDid);
   app.use(HOSPITAL_ISSUER_ROUTER_PATH, hospitalIssuerRouter);
 
+  // Registers hospital verifier webpages
   const hospitalVerifierRouter = setupHospitalVerifierRouter(agent, sovDid);
   app.use(HOSPITAL_VERIFIER_ROUTER_PATH, hospitalVerifierRouter);
 
+  // Registers DID creation endpoint
   const didRouter = setupDidRouter(agent, did);
   app.use(DID_ROUTER_PATH, didRouter);
 
+  // Registers portal webpage on root route
   app.get("/", (req, res) => {
     res.render("index", {
       smartLaunchPath: `${SMART_ROUTER_PATH}/launch`,

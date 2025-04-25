@@ -22,8 +22,8 @@ import {
   IndyVdrSovDidResolver,
 } from "@credo-ts/indy-vdr";
 import {
-  OpenId4VcIssuerModule,
   OpenId4VciCredentialFormatProfile,
+  OpenId4VcIssuerModule,
   OpenId4VcVerifierModule,
 } from "@credo-ts/openid4vc";
 import { AskarModule } from "@credo-ts/askar";
@@ -39,14 +39,39 @@ import {
 export const OID4VCI_ROUTER_PATH = "/oid4vci";
 export const OID4VP_ROUTER_PATH = "/siop";
 
+/** @module service/agent */
+
+/**
+ * Converts a request for credentials from a holder to credentials ready for signing by the issuer.
+ * Checks if the request specified a supported credential configuration.
+ * Checks if the holder has supplied a valid binding.
+ * Checks if the holder is intended recipient.
+ *
+ * @param issuanceSession object representing the issuance session, which also contains credential offer metadata
+ * @param holderBindings object containing the bindings supplied by the holder
+ * @param credentialConfigurationIds array of credential configuration ids requested
+ * @param supported object containing credential configuration definitions
+ * @returns object containing the data for signing
+ * @throws Error if specified credential configuration is not supported
+ * @throws Error if a supplied holder binding is not a DID
+ * @throws Error if a supplied holder binding is not the intended recipient
+ * @throws Error if format of specified credential configuration is not "jwt_vc_json"
+ */
 export async function credentialRequestToCredentialMapperFunction({
   issuanceSession,
   holderBindings,
   credentialConfigurationIds,
   credentialConfigurationsSupported: supported,
 }) {
+  // This function only handles the first specified credential configuration
+  // This is enough for the purposes of this application, as it is only expected to handle its own offers
   const credentialConfigurationId = credentialConfigurationIds[0];
   const credentialConfiguration = supported[credentialConfigurationId];
+
+  if (!credentialConfiguration) {
+    throw new Error("Credential configuration not supported.");
+  }
+
   const prescriptionClaims = await getPrescriptionClaims(
     issuanceSession.issuanceMetadata.prescriptionId,
   );
@@ -95,6 +120,20 @@ export async function credentialRequestToCredentialMapperFunction({
   throw new Error("Invalid credential request.");
 }
 
+/**
+ * Fetches the genesis transactions of the configured Indy network and initializes an agent with it.
+ *
+ * The agent is also configured with:
+ * - an Askar wallet
+ * - support for creating and resolving DIDs with the indy method
+ * - support for resolving DIDs with the sov method
+ * - OID4VCI support
+ * - OID4VP support
+ *
+ * @param logger {Logger} a logger instance used by the agent
+ * @returns {Promise<Agent<{indyVdr: IndyVdrModule, askar: AskarModule, dids: DidsModule, openid4VcIssuer: OpenId4VcIssuerModule, openid4VcVerifier: OpenId4VcVerifierModule}>>} the initialized agent object
+ * @throws Error if the Indy network can not be reached
+ */
 export async function initializeAgent(logger) {
   const transactionsRq = await axios.get(
     "http://" + process.env.BACKEND_INDY_NETWORK_IP + ":9000/genesis",
@@ -151,6 +190,15 @@ export async function initializeAgent(logger) {
   return agent;
 }
 
+/**
+ * Generates and stores a DID using the indy method in the agents wallet if none exists.
+ * This DID will be used with the OID4VCI and OID4VP services.
+ * The process of generating the DID involves registering an endorser on the agents Indy network.
+ * The process assumes the Indy network is a [VON network]{@link https://github.com/bcgov/von-network}.
+ *
+ * @param agent
+ * @returns {Promise<string>}
+ */
 export async function setDid(agent) {
   const rl = readline.createInterface({
     input: process.stdin,
