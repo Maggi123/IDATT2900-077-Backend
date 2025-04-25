@@ -29,6 +29,7 @@ import {
   HOSPITAL_VERIFIER_ROUTER_PATH,
   setupHospitalVerifierRouter,
 } from "#src/controller/hospital.verifier.controller.mjs";
+import { hospitalDisplay } from "#src/service/hospital.issuer.service.mjs";
 
 export async function setupApp() {
   const app = express();
@@ -73,6 +74,7 @@ export async function setupApp() {
   app.set("view engine", "pug");
 
   await createIssuer(agent, sovDid);
+  await createIssuer(agent, sovDid, hospitalDisplay);
   app.use(OID4VCI_ROUTER_PATH, agent.modules.openid4VcIssuer.config.router);
 
   await createVerifier(agent, sovDid);

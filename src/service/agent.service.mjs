@@ -31,7 +31,10 @@ import { askar } from "@openwallet-foundation/askar-nodejs";
 import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
 
 import { getBackendIp, getBackendPort } from "#src/util/networkUtil.mjs";
-import { getPrescriptionClaims } from "#src/service/hospital.issuer.service.mjs";
+import {
+  hospitalDisplay,
+  getPrescriptionClaims,
+} from "#src/service/hospital.issuer.service.mjs";
 
 export const OID4VCI_ROUTER_PATH = "/oid4vci";
 export const OID4VP_ROUTER_PATH = "/siop";
@@ -262,16 +265,7 @@ export const supportedCredentials = {
   },
 };
 
-export const display = [
-  {
-    name: "Hospital",
-    description: "A hospital",
-    text_color: "#ABCDEF",
-    background_color: "#FFFF00",
-  },
-];
-
-export async function createIssuer(agent, issuerId) {
+export async function createIssuer(agent, issuerId, issuerDisplay) {
   let issuerRecord;
 
   try {
@@ -285,7 +279,7 @@ export async function createIssuer(agent, issuerId) {
   if (issuerRecord) {
     await agent.modules.openid4VcIssuer.updateIssuerMetadata({
       issuerId: issuerId,
-      display: display,
+      display: issuerDisplay,
       credentialConfigurationsSupported: supportedCredentials,
     });
     agent.config.logger.info("Updated issuer metadata");
@@ -294,7 +288,7 @@ export async function createIssuer(agent, issuerId) {
 
   await agent.modules.openid4VcIssuer.createIssuer({
     issuerId: issuerId,
-    display: display,
+    display: issuerDisplay,
     credentialConfigurationsSupported: supportedCredentials,
   });
 }

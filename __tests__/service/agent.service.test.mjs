@@ -17,12 +17,12 @@ import {
   createIssuer,
   createVerifier,
   credentialRequestToCredentialMapperFunction,
-  display,
   initializeAgent,
   setDid,
   supportedCredentials,
 } from "#src/service/agent.service.mjs";
 import { getSimpleAgentMock } from "../helpers/mockAgent.mjs";
+import { hospitalDisplay } from "#src/service/hospital.issuer.service.mjs";
 
 describe("agent service tests", () => {
   const axiosGetMock = vi.hoisted(() => vi.fn());
@@ -62,14 +62,14 @@ describe("agent service tests", () => {
       getIssuerByIdMock.mockRejectedValue(new Error("does not exist"));
       createIssuerMock.mockImplementation(vi.fn());
 
-      await createIssuer(simpleAgentMock, "issuer");
+      await createIssuer(simpleAgentMock, "issuer", hospitalDisplay);
 
       expect(getIssuerByIdMock).toHaveBeenCalledTimes(1);
       expect(getIssuerByIdMock).toHaveBeenCalledWith("issuer");
       expect(createIssuerMock).toHaveBeenCalledTimes(1);
       expect(createIssuerMock).toHaveBeenCalledWith({
         issuerId: "issuer",
-        display: display,
+        display: hospitalDisplay,
         credentialConfigurationsSupported: supportedCredentials,
       });
     });
@@ -83,14 +83,14 @@ describe("agent service tests", () => {
       getIssuerByIdMock.mockResolvedValue("exists");
       updateIssuerMetadataMock.mockImplementation(vi.fn());
 
-      await createIssuer(simpleAgentMock, "issuer");
+      await createIssuer(simpleAgentMock, "issuer", hospitalDisplay);
 
       expect(getIssuerByIdMock).toHaveBeenCalledTimes(1);
       expect(getIssuerByIdMock).toHaveBeenCalledWith("issuer");
       expect(updateIssuerMetadataMock).toHaveBeenCalledTimes(1);
       expect(updateIssuerMetadataMock).toHaveBeenCalledWith({
         issuerId: "issuer",
-        display: display,
+        display: hospitalDisplay,
         credentialConfigurationsSupported: supportedCredentials,
       });
     });

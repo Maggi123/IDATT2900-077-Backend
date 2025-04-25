@@ -82,3 +82,12 @@ export function getIssuanceSessionStateChangedEventHandlerForIssuanceSession(
     }
   };
 }
+
+export const hospitalDisplay = [
+  {
+    name: "Hospital",
+    description: "A hospital",
+    text_color: "#ABCDEF",
+    background_color: "#FFFF00",
+  },
+];
