@@ -28,7 +28,7 @@
 20. Run "node src/server.mjs"
 
 ### First time setup
-When the backend is first started, some extra configurations steps are necessary.\
+When the backend is first started, some extra configuration steps are necessary.\
 The backend server will prompt the user to execute some steps\
 in relation to the local ledger that is run in step 18.\
 A web interface for the ledger can be found [here](http://localhost:9000)
