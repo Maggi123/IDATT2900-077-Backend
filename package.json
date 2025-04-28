@@ -6,7 +6,7 @@
     "dev": "node src/server.mjs",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "docs": "npx jsdoc -c ./conf.json -r ./src"
+    "docs": "npx jsdoc -c ./conf.json -d ./docs -r ./src"
   },
   "author": "",
   "license": "ISC",
