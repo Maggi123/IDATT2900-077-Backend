@@ -49,6 +49,7 @@ export function setupHospitalVerifierRouter(agent, verifierDid) {
         data: data,
         hospitalVerifierPath: HOSPITAL_VERIFIER_ROUTER_PATH,
         verificationSessionEventEndpoint: `${HOSPITAL_VERIFIER_ROUTER_PATH}/verificationEvents/${id}`,
+        nonce: res.locals.cspNonce,
       });
     } catch (err) {
       next(err);

@@ -1,5 +1,7 @@
 import express from "express";
 import session from "express-session";
+import helmet from "helmet";
+import crypto from "crypto";
 import "dotenv/config";
 import { LogLevel } from "@credo-ts/core";
 import { parseIndyDid } from "@credo-ts/anoncreds";
@@ -51,6 +53,27 @@ export async function setupApp() {
 
   app.use(express.static("public"));
   app.set("query parser", "extended");
+
+  // Generate CSP nonce for every request
+  app.use((req, res, next) => {
+    res.locals.cspNonce = crypto.randomBytes(32).toString("hex");
+    next();
+  });
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          scriptSrc: [
+            (req, res) => `'nonce-${res.locals.cspNonce}'`,
+            "'unsafe-inline'",
+          ],
+          styleSrc: ["'self'"],
+          requireTrustedTypesFor: ["'script'"],
+        },
+      },
+    }),
+  );
 
   const logger = new MyLogger(LogLevel.test);
 

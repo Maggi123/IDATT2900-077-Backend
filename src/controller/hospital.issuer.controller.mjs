@@ -46,6 +46,7 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
         hospitalIssuerPath: HOSPITAL_ISSUER_ROUTER_PATH,
         hospitalIssuePrescriptionsPath:
           HOSPITAL_ISSUER_ROUTER_PATH + HOSPITAL_ISSUER_PRESCRIPTIONS_PATH,
+        nonce: res.locals.cspNonce,
       });
     } catch (error) {
       next(error);

@@ -17,7 +17,7 @@ html
                 input(type="text")#recipientDid
             a#generateOffer Generate offer
             a(href= hospitalIssuerPath) Go back
-            script.
+            script(nonce= nonce).
                 let prescription = document.getElementById("prescription");
                 let validityDuration = document.getElementById("validityDuration");
                 let recipientDid = document.getElementById("recipientDid");
