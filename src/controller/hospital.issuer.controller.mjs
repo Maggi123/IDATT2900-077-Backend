@@ -12,6 +12,13 @@ import {
 export const HOSPITAL_ISSUER_ROUTER_PATH = "/issuer/hospital";
 export const HOSPITAL_ISSUER_PRESCRIPTIONS_PATH = `/prescriptions`;
 
+/**
+ * Set up the router for the hospital issuer.
+ *
+ * @param agent the agent used for issuing the prescriptions and logging.
+ * @param issuerDid the DID of the issuer.
+ * @returns the router for the hospital issuer.
+ */
 export function setupHospitalIssuerRouter(agent, issuerDid) {
   const router = express.Router();
 
@@ -45,6 +52,7 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
 
   router.get(
     `${HOSPITAL_ISSUER_PRESCRIPTIONS_PATH}/:id/offer`,
+    // Checks that the MedicationRequest with the given id exists.
     async (req, res, next) => {
       try {
         await getMedicationRequest(req.params.id);
@@ -56,6 +64,7 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
         res.status(404).send();
       }
     },
+    // Checks that the recipient DID is valid.
     async (req, res, next) => {
       try {
         parseDid(req.query.recipient);

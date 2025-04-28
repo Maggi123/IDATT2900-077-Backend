@@ -22,8 +22,8 @@ import {
   IndyVdrSovDidResolver,
 } from "@credo-ts/indy-vdr";
 import {
-  OpenId4VcIssuerModule,
   OpenId4VciCredentialFormatProfile,
+  OpenId4VcIssuerModule,
   OpenId4VcVerifierModule,
 } from "@credo-ts/openid4vc";
 import { AskarModule } from "@credo-ts/askar";
@@ -36,14 +36,37 @@ import { getPrescriptionClaims } from "#src/service/hospital.issuer.service.mjs"
 export const OID4VCI_ROUTER_PATH = "/oid4vci";
 export const OID4VP_ROUTER_PATH = "/siop";
 
+/**
+ * Converts a request for credentials from a holder to credentials ready for signing by the issuer.
+ * Checks if the request specified a supported credential configuration.
+ * Checks if the holder has supplied a valid binding.
+ * Checks if the holder is the intended recipient.
+ *
+ * @param issuanceSession object representing the issuance session, which also contains credential offer metadata
+ * @param holderBindings object containing the bindings supplied by the holder
+ * @param credentialConfigurationIds array of credential configuration ids requested
+ * @param supported object containing credential configuration definitions
+ * @returns object containing the data for signing
+ * @throws Error if specified credential configuration is not supported
+ * @throws Error if a supplied holder binding is not a DID
+ * @throws Error if a supplied holder binding is not the intended recipient
+ * @throws Error if the format of specified credential configuration is not "jwt_vc_json"
+ */
 export async function credentialRequestToCredentialMapperFunction({
   issuanceSession,
   holderBindings,
   credentialConfigurationIds,
   credentialConfigurationsSupported: supported,
 }) {
+  // This function only handles the first specified credential configuration
+  // This is enough for the purposes of this application, as it is only expected to handle its own offers
   const credentialConfigurationId = credentialConfigurationIds[0];
   const credentialConfiguration = supported[credentialConfigurationId];
+
+  if (!credentialConfiguration) {
+    throw new Error("Credential configuration not supported.");
+  }
+
   const prescriptionClaims = await getPrescriptionClaims(
     issuanceSession.issuanceMetadata.prescriptionId,
   );
@@ -92,6 +115,21 @@ export async function credentialRequestToCredentialMapperFunction({
   throw new Error("Invalid credential request.");
 }
 
+/**
+ * Fetches the genesis transactions of the configured Indy network and initializes an agent with it.
+ * The function assumes the Indy network is a [VON network]{@link https://github.com/bcgov/von-network} running on prot 9000.
+ *
+ * The agent is also configured with:
+ * - an Askar wallet
+ * - support for creating and resolving DIDs with the indy method
+ * - support for resolving DIDs with the sov method
+ * - OID4VCI support
+ * - OID4VP support
+ *
+ * @param logger {Logger} a logger instance used by the agent
+ * @returns {Promise<Agent<{indyVdr: IndyVdrModule, askar: AskarModule, dids: DidsModule, openid4VcIssuer: OpenId4VcIssuerModule, openid4VcVerifier: OpenId4VcVerifierModule}>>} the initialized agent object
+ * @throws Error if the Indy network cannot be reached
+ */
 export async function initializeAgent(logger) {
   const transactionsRq = await axios.get(
     "http://" + process.env.BACKEND_INDY_NETWORK_IP + ":9000/genesis",
@@ -148,6 +186,15 @@ export async function initializeAgent(logger) {
   return agent;
 }
 
+/**
+ * Generates and stores a DID using the indy method in the agent's wallet if none exists.
+ * This DID will be used with the OID4VCI and OID4VP services.
+ * The process of generating the DID involves registering an endorser on the agent's Indy network.
+ * The process assumes the Indy network is a [VON network]{@link https://github.com/bcgov/von-network} running on prot 9000.
+ *
+ * @param agent the agent to set a DID for
+ * @returns {Promise<string>} the DID set for the given agent
+ */
 export async function setDid(agent) {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -164,6 +211,7 @@ export async function setDid(agent) {
     Please open the ledgers web interface here: http://${process.env.BACKEND_INDY_NETWORK_IP}:9000/browse/domain`,
     );
 
+    // An existing TRUSTEE transaction NYM is needed so that credo-ts can complete the DID creation process.
     await new Promise((resolve) => {
       rl.question(
         "Please enter the NYM value of a transaction with the TRUSTEE role here: ",
@@ -189,6 +237,8 @@ export async function setDid(agent) {
       return process.exit(1);
     }
 
+    // The DID has to be registered manually on the VON-network ledger because
+    // the agent wallet does not contain the private key of the endorser.
     const nymRequest = JSON.parse(backendDid.didState.nymRequest);
     const didLastColonIndex = backendDid.didState.did.lastIndexOf(":");
     const didShort = backendDid.didState.did.substring(didLastColonIndex + 1);
@@ -211,11 +261,15 @@ export async function setDid(agent) {
       ),
     );
 
+    // If the DID is registered on the ledger, this will ensure a DIDRecord is created in the agent wallet.
     await agent.dids.import({
       did: backendDid.didState.did,
     });
 
     did = backendDid.didState.did;
+
+    // Write the DID to a file so that it can be persisted across restarts.
+    // This is just in case the agent contains multiple indy DIDs.
     fs.writeFile("did.txt", did, (err) => {
       if (err) agent.config.logger.error(err);
     });
@@ -223,6 +277,7 @@ export async function setDid(agent) {
     try {
       did = fs.readFileSync("did.txt").toString();
     } catch (err) {
+      // If the file does not exist, the existing wallet must be deleted to allow the agent to create a new DID.
       agent.config.logger.error(
         `Unable to open file containing backends DID. Cause: ${err}`,
       );
@@ -237,6 +292,10 @@ export async function setDid(agent) {
   return did;
 }
 
+/**
+ * Defines the supported credential configurations for the backend.
+ * Defined in accordance with the [OpenID for Verifiable Credential Issuance draft specification]{@link https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html}.
+ */
 export const supportedCredentials = {
   Prescription: {
     format: OpenId4VciCredentialFormatProfile.JwtVcJson,
@@ -262,16 +321,15 @@ export const supportedCredentials = {
   },
 };
 
-export const display = [
-  {
-    name: "Hospital",
-    description: "A hospital",
-    text_color: "#ABCDEF",
-    background_color: "#FFFF00",
-  },
-];
-
-export async function createIssuer(agent, issuerId) {
+/**
+ * Creates an issuer record in an agent's wallet if none exists.
+ * Updates the issuer record if it already exists.
+ *
+ * @param agent the agent to create the issuer record for
+ * @param issuerId the DID of the issuer
+ * @param issuerDisplay metadata about the display name of the issuer
+ */
+export async function setupIssuer(agent, issuerId, issuerDisplay) {
   let issuerRecord;
 
   try {
@@ -283,9 +341,10 @@ export async function createIssuer(agent, issuerId) {
   }
 
   if (issuerRecord) {
+    // Update issuer metadata in case it has changed.
     await agent.modules.openid4VcIssuer.updateIssuerMetadata({
       issuerId: issuerId,
-      display: display,
+      display: issuerDisplay,
       credentialConfigurationsSupported: supportedCredentials,
     });
     agent.config.logger.info("Updated issuer metadata");
@@ -294,12 +353,19 @@ export async function createIssuer(agent, issuerId) {
 
   await agent.modules.openid4VcIssuer.createIssuer({
     issuerId: issuerId,
-    display: display,
+    display: issuerDisplay,
     credentialConfigurationsSupported: supportedCredentials,
   });
 }
 
-export async function createVerifier(agent, verifierId) {
+/**
+ * Creates a verifier record in an agent's wallet if none exists.
+ * Does nothing if the verifier record already exists.
+ *
+ * @param agent the agent to create the verifier record for
+ * @param verifierId the DID of the verifier
+ */
+export async function setupVerifier(agent, verifierId) {
   let verifierRecord;
 
   try {

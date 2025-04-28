@@ -4,6 +4,13 @@ import { createDid } from "#src/service/did.service.mjs";
 
 export const DID_ROUTER_PATH = "/did";
 
+/**
+ * Set up the router for the DID controller.
+ *
+ * @param agent the agent used for DID creation and logging.
+ * @param endorserDid the DID used for endorsing the DID creation transaction.
+ * @returns the router for the DID controller.
+ */
 export function setupDidRouter(agent, endorserDid) {
   const router = express.Router();
 

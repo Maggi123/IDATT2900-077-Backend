@@ -9,9 +9,18 @@ import { getMedicationRequest } from "#src/service/smart.service.mjs";
 const RXNORM_SYSTEM_DEFINITION_URL =
   "http://www.nlm.nih.gov/research/umls/rxnorm";
 
+/**
+ * Fetches the prescription claims corresponding to the MedicationRequest with the given id.
+ *
+ * @param id The id of the MedicationRequest.
+ * @returns the prescription claims.
+ */
 export async function getPrescriptionClaims(id) {
-  const medicationRequest = await getMedicationRequest(id);
   const prescriptionClaims = {};
+
+  const medicationRequest = await getMedicationRequest(id);
+
+  // Fetch the active ingredient from RxNorm if available.
   if (medicationRequest.medicationCodeableConcept.coding.length > 0) {
     for (const item of medicationRequest.medicationCodeableConcept.coding) {
       if (item.system === RXNORM_SYSTEM_DEFINITION_URL)
@@ -25,6 +34,16 @@ export async function getPrescriptionClaims(id) {
   return prescriptionClaims;
 }
 
+/**
+ * Creates a credential offer for a prescription.
+ *
+ * @param agent The agent to use for issuing the credential.
+ * @param issuerId the DID of the issuer.
+ * @param prescriptionId the MedicationRequest id of the prescription.
+ * @param validityDays the validity of the credential in days.
+ * @param recipientDid the DID of the recipient.
+ * @returns {Promise<string>} the credential offer URI.
+ */
 export async function createPrescriptionOffer(
   agent,
   issuerId,
@@ -57,6 +76,14 @@ export async function createPrescriptionOffer(
   return credentialOffer;
 }
 
+/**
+ * Constructs a handler function that logs state changes of the issuance session with the given id.
+ * The handler is automatically removed when the issuance session is completed.
+ *
+ * @param agent The agent to use for logging.
+ * @param issuanceSessionId The id of the issuance session.
+ * @returns the handler function.
+ */
 export function getIssuanceSessionStateChangedEventHandlerForIssuanceSession(
   agent,
   issuanceSessionId,
@@ -82,3 +109,15 @@ export function getIssuanceSessionStateChangedEventHandlerForIssuanceSession(
     }
   };
 }
+
+/**
+ * The display name metadata for the hospital issuer.
+ */
+export const hospitalDisplay = [
+  {
+    name: "Hospital",
+    description: "A hospital",
+    text_color: "#ABCDEF",
+    background_color: "#FFFF00",
+  },
+];

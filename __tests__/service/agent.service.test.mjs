@@ -14,15 +14,15 @@ import {
 
 import { MyLogger } from "#src/util/logger.mjs";
 import {
-  createIssuer,
-  createVerifier,
+  setupIssuer,
+  setupVerifier,
   credentialRequestToCredentialMapperFunction,
-  display,
   initializeAgent,
   setDid,
   supportedCredentials,
 } from "#src/service/agent.service.mjs";
 import { getSimpleAgentMock } from "../helpers/mockAgent.mjs";
+import { hospitalDisplay } from "#src/service/hospital.issuer.service.mjs";
 
 describe("agent service tests", () => {
   const axiosGetMock = vi.hoisted(() => vi.fn());
@@ -47,7 +47,7 @@ describe("agent service tests", () => {
     vol.reset();
   });
 
-  describe("createIssuer", () => {
+  describe("setupIssuer", () => {
     const getIssuerByIdMock = vi.spyOn(
       simpleAgentMock.modules.openid4VcIssuer,
       "getIssuerByIssuerId",
@@ -62,14 +62,14 @@ describe("agent service tests", () => {
       getIssuerByIdMock.mockRejectedValue(new Error("does not exist"));
       createIssuerMock.mockImplementation(vi.fn());
 
-      await createIssuer(simpleAgentMock, "issuer");
+      await setupIssuer(simpleAgentMock, "issuer", hospitalDisplay);
 
       expect(getIssuerByIdMock).toHaveBeenCalledTimes(1);
       expect(getIssuerByIdMock).toHaveBeenCalledWith("issuer");
       expect(createIssuerMock).toHaveBeenCalledTimes(1);
       expect(createIssuerMock).toHaveBeenCalledWith({
         issuerId: "issuer",
-        display: display,
+        display: hospitalDisplay,
         credentialConfigurationsSupported: supportedCredentials,
       });
     });
@@ -83,20 +83,20 @@ describe("agent service tests", () => {
       getIssuerByIdMock.mockResolvedValue("exists");
       updateIssuerMetadataMock.mockImplementation(vi.fn());
 
-      await createIssuer(simpleAgentMock, "issuer");
+      await setupIssuer(simpleAgentMock, "issuer", hospitalDisplay);
 
       expect(getIssuerByIdMock).toHaveBeenCalledTimes(1);
       expect(getIssuerByIdMock).toHaveBeenCalledWith("issuer");
       expect(updateIssuerMetadataMock).toHaveBeenCalledTimes(1);
       expect(updateIssuerMetadataMock).toHaveBeenCalledWith({
         issuerId: "issuer",
-        display: display,
+        display: hospitalDisplay,
         credentialConfigurationsSupported: supportedCredentials,
       });
     });
   });
 
-  describe("createVerifier", () => {
+  describe("setupVerifier", () => {
     const createVerifierMock = vi.spyOn(
       simpleAgentMock.modules.openid4VcVerifier,
       "createVerifier",
@@ -113,7 +113,7 @@ describe("agent service tests", () => {
       );
       createVerifierMock.mockImplementation(vi.fn());
 
-      await createVerifier(simpleAgentMock, "verifier");
+      await setupVerifier(simpleAgentMock, "verifier");
 
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledTimes(1);
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledWith("verifier");
@@ -126,7 +126,7 @@ describe("agent service tests", () => {
     it("should not create enw verifier if it exists", async () => {
       getVerifierByVerifierIdMock.mockResolvedValue("verifier");
 
-      await createVerifier(simpleAgentMock, "verifier");
+      await setupVerifier(simpleAgentMock, "verifier");
 
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledTimes(1);
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledWith("verifier");

@@ -4,6 +4,13 @@ import {
 } from "@credo-ts/openid4vc";
 import { asArray } from "@credo-ts/core";
 
+/**
+ * Creates a prescription verification request.
+ *
+ * @param agent the agent to use for creating the request.
+ * @param verifierId the DID of the verifier.
+ * @returns {Promise<string[]>} the authorization request URI and verification session id.
+ */
 export async function createPrescriptionVerificationRequest(agent, verifierId) {
   const { authorizationRequest, verificationSession } =
     await agent.modules.openid4VcVerifier.createAuthorizationRequest({
@@ -12,7 +19,12 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
         didUrl: `${verifierId}#key-1`,
         method: "did",
       },
+      // The version of the OpenID for Verifiable Presentations specification to use.
+      // Setting draft version 21 ensures that the verifier can verify a presentation from the wallet application.
+      // Draft version 24 is also supported, but it is not supported by the wallet application.
       version: "v1.draft21",
+      // A DIF Presentation Exchange definition for the prescription verification.
+      // See https://identity.foundation/presentation-exchange/spec/v2.0.0/ for more information.
       presentationExchange: {
         definition: {
           id: "hospital_prescription_verification",
@@ -43,6 +55,17 @@ export async function createPrescriptionVerificationRequest(agent, verifierId) {
   return [authorizationRequest, verificationSession.id];
 }
 
+/**
+ * Constructs a handler function logs state changes of the verification session.
+ * The handler also signals the end of the verification process by sending an SSE with the provided response object.
+ * The SSE includes the names of the prescription that were verified.
+ * THe handler function is automatically unregistered when the verification session is completed.
+ *
+ * @param agent the agent to use for logging.
+ * @param id the verification session id.
+ * @param res the response object to use for sending the SSE.
+ * @returns {Promise<(function(*): Promise<void>)>} the handler function.
+ */
 export async function getPrescriptionVerificationSessionStateChangeHandler(
   agent,
   id,
@@ -90,6 +113,12 @@ export async function getPrescriptionVerificationSessionStateChangeHandler(
   return handler;
 }
 
+/**
+ * Converts a verifiable presentation containing prescriptions to a string containing the names of the prescriptions.
+ *
+ * @param prescriptionPresentation the verifiable presentation containing the prescriptions.
+ * @returns {string} the names of the prescriptions.
+ */
 export function convertPrescriptionVerifiablePresentationToPrescriptionNames(
   prescriptionPresentation,
 ) {
