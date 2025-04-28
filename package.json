@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node src/server.mjs",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "docs": "npx jsdoc -c ./conf.json -r ./src"
   },
   "author": "",
   "license": "ISC",
@@ -37,6 +38,7 @@
     "eslint-plugin-prettier": "^5.2.3",
     "eventsource": "^3.0.6",
     "globals": "^16.0.0",
+    "jsdoc": "^4.0.4",
     "memfs": "^4.17.0",
     "prettier": "3.5.3",
     "supertest": "^7.1.0",
