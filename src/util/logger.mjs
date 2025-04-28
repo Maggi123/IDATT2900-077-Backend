@@ -1,5 +1,7 @@
 import { BaseLogger, LogLevel } from "@credo-ts/core";
 
+/** @module util/logger */
+
 /**
  * @class
  * @classDesc A logger that prints to console.

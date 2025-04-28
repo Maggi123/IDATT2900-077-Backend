@@ -1,3 +1,5 @@
+/** @module util/prescription */
+
 /**
  * Fetches the name of the active ingredient in a drug from the RxNorm service.
  *

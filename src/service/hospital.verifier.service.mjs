@@ -4,6 +4,8 @@ import {
 } from "@credo-ts/openid4vc";
 import { asArray } from "@credo-ts/core";
 
+/** @module service/hospital-verifier */
+
 /**
  * Creates a prescription verification request.
  *
@@ -71,7 +73,7 @@ export async function getPrescriptionVerificationSessionStateChangeHandler(
   id,
   res,
 ) {
-  const handler = async (event) => {
+  return async function handler(event) {
     if (event.payload.verificationSession.id === id) {
       agent.config.logger.info(
         "Verification session state changed to ",
@@ -109,8 +111,6 @@ export async function getPrescriptionVerificationSessionStateChangeHandler(
       }
     }
   };
-
-  return handler;
 }
 
 /**

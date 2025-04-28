@@ -33,6 +33,8 @@ import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
 import { getBackendIp, getBackendPort } from "#src/util/networkUtil.mjs";
 import { getPrescriptionClaims } from "#src/service/hospital.issuer.service.mjs";
 
+/** @module service/agent */
+
 export const OID4VCI_ROUTER_PATH = "/oid4vci";
 export const OID4VP_ROUTER_PATH = "/siop";
 
@@ -46,7 +48,7 @@ export const OID4VP_ROUTER_PATH = "/siop";
  * @param holderBindings object containing the bindings supplied by the holder
  * @param credentialConfigurationIds array of credential configuration ids requested
  * @param supported object containing credential configuration definitions
- * @returns object containing the data for signing
+ * @returns {Promise<OpenId4VciSignCredentials>} object containing the data for signing
  * @throws Error if specified credential configuration is not supported
  * @throws Error if a supplied holder binding is not a DID
  * @throws Error if a supplied holder binding is not the intended recipient
@@ -126,7 +128,7 @@ export async function credentialRequestToCredentialMapperFunction({
  * - OID4VCI support
  * - OID4VP support
  *
- * @param logger {Logger} a logger instance used by the agent
+ * @param logger a logger instance used by the agent
  * @returns {Promise<Agent<{indyVdr: IndyVdrModule, askar: AskarModule, dids: DidsModule, openid4VcIssuer: OpenId4VcIssuerModule, openid4VcVerifier: OpenId4VcVerifierModule}>>} the initialized agent object
  * @throws Error if the Indy network cannot be reached
  */

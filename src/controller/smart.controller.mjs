@@ -4,12 +4,14 @@ import smart from "fhirclient";
 import { setFhirClient } from "#src/service/smart.service.mjs";
 import { HOSPITAL_ISSUER_ROUTER_PATH } from "#src/controller/hospital.issuer.controller.mjs";
 
+/** @module controller/smart */
+
 export const SMART_ROUTER_PATH = "/smart";
 
 /**
  * Set up the router for the SMART launch flow.
  *
- * @returns the router for the SMART launch flow.
+ * @returns {Express.Router} the router for the SMART launch flow.
  * @see https://docs.smarthealthit.org/
  */
 export function setupSmartRouter() {

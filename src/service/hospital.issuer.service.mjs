@@ -6,6 +6,8 @@ import {
 import { getRxNormInName } from "#src/util/prescriptionUtil.mjs";
 import { getMedicationRequest } from "#src/service/smart.service.mjs";
 
+/** @module service/hospital-issuer */
+
 const RXNORM_SYSTEM_DEFINITION_URL =
   "http://www.nlm.nih.gov/research/umls/rxnorm";
 
@@ -13,7 +15,7 @@ const RXNORM_SYSTEM_DEFINITION_URL =
  * Fetches the prescription claims corresponding to the MedicationRequest with the given id.
  *
  * @param id The id of the MedicationRequest.
- * @returns the prescription claims.
+ * @returns {Promise<{activeIngredient: (string|undefined), name: string, authoredOn: string}>} the prescription claims.
  */
 export async function getPrescriptionClaims(id) {
   const prescriptionClaims = {};
@@ -82,7 +84,7 @@ export async function createPrescriptionOffer(
  *
  * @param agent The agent to use for logging.
  * @param issuanceSessionId The id of the issuance session.
- * @returns the handler function.
+ * @returns {function(*): void} the handler function.
  */
 export function getIssuanceSessionStateChangedEventHandlerForIssuanceSession(
   agent,

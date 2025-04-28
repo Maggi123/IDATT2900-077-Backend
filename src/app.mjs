@@ -44,7 +44,7 @@ import { hospitalDisplay } from "#src/service/hospital.issuer.service.mjs";
  *
  * Exits the process early if the agent initialization fails.
  *
- * @returns {Promise<[Express, MyLogger]>} array of express application and logger
+ * @returns {Promise<(Array<Express, MyLogger>)>} array of express application and logger
  */
 export async function setupApp() {
   const app = express();
