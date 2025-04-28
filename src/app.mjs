@@ -108,9 +108,14 @@ export async function setupApp() {
 
   app.use(
     session({
+      name: "session",
       secret: "my secret",
       resave: false,
       saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        sameSite: "true",
+      },
     }),
   );
   app.set("view engine", "pug");
