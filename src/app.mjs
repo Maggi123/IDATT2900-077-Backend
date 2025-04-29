@@ -60,6 +60,7 @@ export async function setupApp() {
     next();
   });
 
+  // Use helmet to set up security headers
   app.use(
     helmet({
       contentSecurityPolicy: {
