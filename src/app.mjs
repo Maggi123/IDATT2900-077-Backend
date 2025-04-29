@@ -108,7 +108,7 @@ export async function setupApp() {
 
   app.use(
     session({
-      name: "session",
+      name: process.env.SESSION_SECRET || "my secret",
       secret: "my secret",
       resave: false,
       saveUninitialized: false,
