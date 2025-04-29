@@ -14,7 +14,7 @@ html
             p#receivedText Received and verified response successfully!
             p#data
             a(href= hospitalVerifierPath) Go back
-            script.
+            script(nonce= nonce).
                 const eventSource = new EventSource("#{verificationSessionEventEndpoint}");
 
                 eventSource.onmessage = (event) => {

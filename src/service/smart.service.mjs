@@ -1,5 +1,7 @@
 import { SMART_ROUTER_PATH } from "#src/controller/smart.controller.mjs";
 
+/** @module service/smart */
+
 let fhirClient;
 
 export function setFhirClient(client) {
@@ -9,14 +11,21 @@ export function setFhirClient(client) {
 /**
  * Request a MedicationRequest by id.
  *
- * @param id {string} The id of the MedicationRequest to request.
- * @returns The MedicationRequest resource.
+ * @param id {string} the id of the MedicationRequest to request.
+ * @returns {Promise<Object>} the MedicationRequest resource.
  * @see https://www.hl7.org/fhir/medicationrequest.html
  */
 export async function getMedicationRequest(id) {
   return await fhirClient.request(`MedicationRequest/${id}`);
 }
 
+/**
+ * Request all MedicationRequests.
+ *
+ * @returns {Promise<Object>} all MedicationRequest objects in a bundle.
+ * @see https://www.hl7.org/fhir/medicationrequest.html
+ * @see https://www.hl7.org/fhir/bundle.html
+ */
 export async function getAllMedicationRequests() {
   return await fhirClient.request("MedicationRequest");
 }
@@ -26,7 +35,7 @@ export async function getAllMedicationRequests() {
  * The middleware will redirect the user to the portal if the session is not valid.
  *
  * @param agent {Agent} the agent to use for logging.
- * @returns {(function(Request, Response, NextFunction): void)}
+ * @returns {function(Request, Response, NextFunction): void}
  */
 export function getCheckSmartSessionMiddleware(agent) {
   return function (req, res, next) {

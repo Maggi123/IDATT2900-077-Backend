@@ -6,6 +6,8 @@ import {
 import QRCode from "qrcode";
 import { OpenId4VcVerifierEvents } from "@credo-ts/openid4vc";
 
+/** @module controller/hospital-verifier */
+
 export const HOSPITAL_VERIFIER_ROUTER_PATH = "/verifier/hospital";
 export const HOSPITAL_VERIFIER_PRESCRIPTIONS_PATH = "/prescriptions";
 
@@ -14,7 +16,7 @@ export const HOSPITAL_VERIFIER_PRESCRIPTIONS_PATH = "/prescriptions";
  *
  * @param agent the agent used for verification and logging.
  * @param verifierDid the DID of the verifier.
- * @returns the router for the hospital verifier.
+ * @returns {Express.Router} the router for the hospital verifier.
  */
 export function setupHospitalVerifierRouter(agent, verifierDid) {
   const router = express.Router();
@@ -47,6 +49,7 @@ export function setupHospitalVerifierRouter(agent, verifierDid) {
         data: data,
         hospitalVerifierPath: HOSPITAL_VERIFIER_ROUTER_PATH,
         verificationSessionEventEndpoint: `${HOSPITAL_VERIFIER_ROUTER_PATH}/verificationEvents/${id}`,
+        nonce: res.locals.cspNonce,
       });
     } catch (err) {
       next(err);

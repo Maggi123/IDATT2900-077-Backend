@@ -9,6 +9,8 @@ import {
   getMedicationRequest,
 } from "#src/service/smart.service.mjs";
 
+/** @module constroller/hospital-issuer */
+
 export const HOSPITAL_ISSUER_ROUTER_PATH = "/issuer/hospital";
 export const HOSPITAL_ISSUER_PRESCRIPTIONS_PATH = `/prescriptions`;
 
@@ -17,7 +19,7 @@ export const HOSPITAL_ISSUER_PRESCRIPTIONS_PATH = `/prescriptions`;
  *
  * @param agent the agent used for issuing the prescriptions and logging.
  * @param issuerDid the DID of the issuer.
- * @returns the router for the hospital issuer.
+ * @returns {Express.Router} the router for the hospital issuer.
  */
 export function setupHospitalIssuerRouter(agent, issuerDid) {
   const router = express.Router();
@@ -44,6 +46,7 @@ export function setupHospitalIssuerRouter(agent, issuerDid) {
         hospitalIssuerPath: HOSPITAL_ISSUER_ROUTER_PATH,
         hospitalIssuePrescriptionsPath:
           HOSPITAL_ISSUER_ROUTER_PATH + HOSPITAL_ISSUER_PRESCRIPTIONS_PATH,
+        nonce: res.locals.cspNonce,
       });
     } catch (error) {
       next(error);

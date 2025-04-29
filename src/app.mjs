@@ -1,5 +1,7 @@
 import express from "express";
 import session from "express-session";
+import helmet from "helmet";
+import crypto from "crypto";
 import "dotenv/config";
 import { LogLevel } from "@credo-ts/core";
 import { parseIndyDid } from "@credo-ts/anoncreds";
@@ -44,13 +46,34 @@ import { hospitalDisplay } from "#src/service/hospital.issuer.service.mjs";
  *
  * Exits the process early if the agent initialization fails.
  *
- * @returns {Promise<[Express, MyLogger]>} array of express application and logger
+ * @returns {Promise<(Array<Express, MyLogger>)>} array of express application and logger
  */
 export async function setupApp() {
   const app = express();
 
   app.use(express.static("public"));
   app.set("query parser", "extended");
+
+  // Generate CSP nonce for every request
+  app.use((req, res, next) => {
+    res.locals.cspNonce = crypto.randomBytes(32).toString("hex");
+    next();
+  });
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          scriptSrc: [
+            (req, res) => `'nonce-${res.locals.cspNonce}'`,
+            "'unsafe-inline'",
+          ],
+          styleSrc: ["'self'"],
+          requireTrustedTypesFor: ["'script'"],
+        },
+      },
+    }),
+  );
 
   const logger = new MyLogger(LogLevel.test);
 
@@ -85,9 +108,14 @@ export async function setupApp() {
 
   app.use(
     session({
+      name: process.env.SESSION_SECRET || "my secret",
       secret: "my secret",
       resave: false,
       saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        sameSite: true,
+      },
     }),
   );
   app.set("view engine", "pug");
