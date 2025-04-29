@@ -114,7 +114,7 @@ export async function setupApp() {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        sameSite: "true",
+        sameSite: true,
       },
     }),
   );
