@@ -1,7 +1,7 @@
 # Running
 
 ### Dependencies for running locally
-- Node v. 18.18.x
+- Node.js v. 18.18.x
 - Docker Engine v. 28.x
 - Docker Compose
 
@@ -26,7 +26,7 @@
 18. Run "git submodule update --init"
 19. Run "./von-network/manage build"
 20. Run "./von-network/manage up"
-21. Run "node src/server.mjs"
+21. Run "npm run dev"
 
 ### First time setup
 When the backend is first started, some extra configuration steps are necessary.\
@@ -36,4 +36,4 @@ A web interface for the ledger can be found [here](http://localhost:9000)
 when the ledger is running.
 
 ### How to run after first time setup
-Execute steps 8, 15, 16, 20 and 21.
+Execute steps 3, 4, 8, 15, 16, 20 and 21.
