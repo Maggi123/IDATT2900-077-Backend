@@ -111,8 +111,8 @@ export async function setupApp() {
 
   app.use(
     session({
-      name: process.env.SESSION_SECRET || "my secret",
-      secret: "my secret",
+      name: "session",
+      secret: process.env.SESSION_SECRET || "my-secret",
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -121,7 +121,6 @@ export async function setupApp() {
       },
     }),
   );
-  app.set("view engine", "pug");
 
   // Sets up a hospital OID4VCI issuer
   await setupIssuer(agent, sovDid, hospitalDisplay);
