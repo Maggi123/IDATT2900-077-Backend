@@ -51,15 +51,13 @@ import { hospitalDisplay } from "#src/service/hospital.issuer.service.mjs";
 export async function setupApp() {
   const app = express();
 
-  app.use(express.static("public"));
-  app.set("query parser", "extended");
-
   // Generate CSP nonce for every request
   app.use((req, res, next) => {
     res.locals.cspNonce = crypto.randomBytes(32).toString("hex");
     next();
   });
 
+  // Use helmet to set up security headers
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -74,6 +72,11 @@ export async function setupApp() {
       },
     }),
   );
+
+  app.use(express.static("public"));
+
+  app.set("query parser", "extended");
+  app.set("view engine", "pug");
 
   const logger = new MyLogger(LogLevel.test);
 
@@ -108,8 +111,8 @@ export async function setupApp() {
 
   app.use(
     session({
-      name: process.env.SESSION_SECRET || "my secret",
-      secret: "my secret",
+      name: "session",
+      secret: process.env.SESSION_SECRET || "my-secret",
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -118,7 +121,6 @@ export async function setupApp() {
       },
     }),
   );
-  app.set("view engine", "pug");
 
   // Sets up a hospital OID4VCI issuer
   await setupIssuer(agent, sovDid, hospitalDisplay);
