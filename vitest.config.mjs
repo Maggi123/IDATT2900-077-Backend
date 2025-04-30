@@ -10,6 +10,7 @@ export default defineConfig({
         "./von-network/**",
         "./public/**",
         "**/__mocks__/**",
+        "./docs/**",
       ],
     },
     exclude: [
