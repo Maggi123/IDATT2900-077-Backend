@@ -51,9 +51,6 @@ import { hospitalDisplay } from "#src/service/hospital.issuer.service.mjs";
 export async function setupApp() {
   const app = express();
 
-  app.use(express.static("public"));
-  app.set("query parser", "extended");
-
   // Generate CSP nonce for every request
   app.use((req, res, next) => {
     res.locals.cspNonce = crypto.randomBytes(32).toString("hex");
@@ -75,6 +72,11 @@ export async function setupApp() {
       },
     }),
   );
+
+  app.use(express.static("public"));
+
+  app.set("query parser", "extended");
+  app.set("view engine", "pug");
 
   const logger = new MyLogger(LogLevel.test);
 
