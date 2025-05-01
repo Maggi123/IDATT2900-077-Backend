@@ -366,8 +366,9 @@ export async function setupIssuer(agent, issuerId, issuerDisplay) {
  *
  * @param agent the agent to create the verifier record for
  * @param verifierId the DID of the verifier
+ * @param name the name of the verifier
  */
-export async function setupVerifier(agent, verifierId) {
+export async function setupVerifier(agent, verifierId, name) {
   let verifierRecord;
 
   try {
@@ -380,9 +381,22 @@ export async function setupVerifier(agent, verifierId) {
     );
   }
 
-  if (verifierRecord) return;
+  if (verifierRecord) {
+    // Update verifier metadata in case it has changed.
+    await agent.modules.openid4VcVerifier.updateVerifierMetadata({
+      verifierId: verifierId,
+      clientMetadata: {
+        client_name: name,
+      },
+    });
+    agent.config.logger.info("Updated verifier metadata");
+    return;
+  }
 
   await agent.modules.openid4VcVerifier.createVerifier({
     verifierId: verifierId,
+    clientMetadata: {
+      client_name: name,
+    },
   });
 }
