@@ -113,23 +113,39 @@ describe("agent service tests", () => {
       );
       createVerifierMock.mockImplementation(vi.fn());
 
-      await setupVerifier(simpleAgentMock, "verifier");
+      await setupVerifier(simpleAgentMock, "verifier", "name");
 
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledTimes(1);
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledWith("verifier");
       expect(createVerifierMock).toHaveBeenCalledTimes(1);
       expect(createVerifierMock).toHaveBeenCalledWith({
         verifierId: "verifier",
+        clientMetadata: {
+          client_name: "name",
+        },
       });
     });
 
-    it("should not create enw verifier if it exists", async () => {
-      getVerifierByVerifierIdMock.mockResolvedValue("verifier");
+    it("should update verifier if it exists", async () => {
+      const updateVerifierMetadataMock = vi.spyOn(
+        simpleAgentMock.modules.openid4VcVerifier,
+        "updateVerifierMetadata",
+      );
 
-      await setupVerifier(simpleAgentMock, "verifier");
+      getVerifierByVerifierIdMock.mockResolvedValue("verifier");
+      updateVerifierMetadataMock.mockImplementation(vi.fn());
+
+      await setupVerifier(simpleAgentMock, "verifier", "name");
 
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledTimes(1);
       expect(getVerifierByVerifierIdMock).toHaveBeenCalledWith("verifier");
+      expect(updateVerifierMetadataMock).toHaveBeenCalledTimes(1);
+      expect(updateVerifierMetadataMock).toHaveBeenCalledWith({
+        verifierId: "verifier",
+        clientMetadata: {
+          client_name: "name",
+        },
+      });
       expect(createVerifierMock).toHaveBeenCalledTimes(0);
     });
   });
