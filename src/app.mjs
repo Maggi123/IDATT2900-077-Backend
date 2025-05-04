@@ -127,7 +127,7 @@ export async function setupApp() {
   app.use(OID4VCI_ROUTER_PATH, agent.modules.openid4VcIssuer.config.router);
 
   // Sets up a hospital OID4VP verifier
-  await setupVerifier(agent, sovDid);
+  await setupVerifier(agent, sovDid, hospitalDisplay[0].name);
   app.use(OID4VP_ROUTER_PATH, agent.modules.openid4VcVerifier.config.router);
 
   // Registers routes for interacting with a SMART server
